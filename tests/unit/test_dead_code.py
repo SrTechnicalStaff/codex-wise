@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 import networkx as nx
 import pytest
 
-from repowise.core.analysis.dead_code import (
+from codex_wise.core.analysis.dead_code import (
     DeadCodeAnalyzer,
     DeadCodeKind,
 )
@@ -661,7 +661,7 @@ def test_dynamic_edge_clamps_unreachable_confidence():
 
 def test_find_dynamic_edge_files_handles_subtypes():
     """find_dynamic_edge_files picks up edges with dynamic_* sub-type prefixes."""
-    from repowise.core.analysis.dead_code.dynamic_markers import find_dynamic_edge_files
+    from codex_wise.core.analysis.dead_code.dynamic_markers import find_dynamic_edge_files
 
     g = nx.DiGraph()
     g.add_node("a.py")
@@ -716,7 +716,7 @@ def test_find_dynamic_edge_files_handles_subtypes():
 )
 def test_dynamic_markers_per_language_coverage(suffix, expected_markers):
     """Each language's marker tuple must contain the documented Phase 2 entries."""
-    from repowise.core.analysis.dead_code.dynamic_markers import _DYNAMIC_IMPORT_MARKERS
+    from codex_wise.core.analysis.dead_code.dynamic_markers import _DYNAMIC_IMPORT_MARKERS
 
     markers = _DYNAMIC_IMPORT_MARKERS.get(suffix, ())
     for expected in expected_markers:

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.ingestion.traverser import FileTraverser, _detect_language
+from codex_wise.core.ingestion.traverser import FileTraverser, _detect_language
 
 # ---------------------------------------------------------------------------
 # Language detection
@@ -199,15 +199,15 @@ class TestExtraExcludePatterns:
 
 
 # ---------------------------------------------------------------------------
-# Per-directory .repowiseIgnore
+# Per-directory .codex-wise-ignore
 # ---------------------------------------------------------------------------
 
 
-class TestPerDirectoryrepowiseIgnore:
-    def test_subdir_repowise_ignore_excludes_dir(self, tmp_path: Path) -> None:
+class TestPerDirectoryCodexWiseIgnore:
+    def test_subdir_codex_wise_ignore_excludes_dir(self, tmp_path: Path) -> None:
         src = tmp_path / "src"
         src.mkdir()
-        (src / ".repowiseIgnore").write_text("generated/\n")
+        (src / ".codex-wise-ignore").write_text("generated/\n")
         (src / "generated").mkdir()
         (src / "generated" / "types.py").write_text("pass")
         (src / "real.py").write_text("pass")
@@ -216,10 +216,10 @@ class TestPerDirectoryrepowiseIgnore:
         assert any("real.py" in p for p in paths)
         assert not any("types.py" in p for p in paths)
 
-    def test_subdir_repowise_ignore_excludes_files(self, tmp_path: Path) -> None:
+    def test_subdir_codex_wise_ignore_excludes_files(self, tmp_path: Path) -> None:
         src = tmp_path / "src"
         src.mkdir()
-        (src / ".repowiseIgnore").write_text("*.test.ts\n")
+        (src / ".codex-wise-ignore").write_text("*.test.ts\n")
         (src / "app.ts").write_text("const x = 1;")
         (src / "app.test.ts").write_text("test('ok', () => {})")
         traverser = FileTraverser(tmp_path)
@@ -227,8 +227,8 @@ class TestPerDirectoryrepowiseIgnore:
         assert any("app.ts" in p and "test" not in p for p in paths)
         assert not any("app.test.ts" in p for p in paths)
 
-    def test_root_repowise_ignore_still_respected(self, tmp_path: Path) -> None:
-        (tmp_path / ".repowiseIgnore").write_text("secret/\n")
+    def test_root_codex_wise_ignore_still_respected(self, tmp_path: Path) -> None:
+        (tmp_path / ".codex-wise-ignore").write_text("secret/\n")
         (tmp_path / "secret").mkdir()
         (tmp_path / "secret" / "key.py").write_text("KEY = 'x'")
         (tmp_path / "app.py").write_text("pass")
@@ -237,10 +237,10 @@ class TestPerDirectoryrepowiseIgnore:
         assert any("app.py" in p for p in paths)
         assert not any("secret" in p for p in paths)
 
-    def test_subdir_repowise_ignore_does_not_affect_sibling_dirs(self, tmp_path: Path) -> None:
+    def test_subdir_codex_wise_ignore_does_not_affect_sibling_dirs(self, tmp_path: Path) -> None:
         api = tmp_path / "api"
         api.mkdir()
-        (api / ".repowiseIgnore").write_text("internal/\n")
+        (api / ".codex-wise-ignore").write_text("internal/\n")
         (api / "internal").mkdir()
         (api / "internal" / "secret.py").write_text("pass")
         (api / "public.py").write_text("pass")

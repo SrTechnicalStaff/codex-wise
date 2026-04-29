@@ -22,7 +22,7 @@ packages/web/.next
 packages/web/out
 
 # Runtime data
-.repowise
+.codex-wise
 *.db
 *.db-shm
 *.db-wal

@@ -2,8 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 /*
- * repowise Design System
- * "Linear's exactness + Stripe's docs quality"
+ * Codex Wise Design System
  * Dark mode primary. No light mode in v1.
  */
 
@@ -33,7 +32,7 @@
   --color-text-inverse: #0d0d0d;
 
   /* ------------------------------------------------------------------ */
-  /* Accent — repowise Orange                                            */
+  /* Accent                                                              */
   /* ------------------------------------------------------------------ */
   --color-accent-primary: #f59520;
   --color-accent-hover: #f7a94d;

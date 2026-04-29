@@ -14,17 +14,17 @@ from pathlib import Path
 import networkx as nx
 import pytest
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.csharp import resolve_csharp_import
-from repowise.core.ingestion.resolvers.dotnet import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.csharp import resolve_csharp_import
+from codex_wise.core.ingestion.resolvers.dotnet import (
     DotNetProjectIndex,
     build_namespace_map,
     parse_csproj,
     parse_sln,
 )
-from repowise.core.ingestion.resolvers.dotnet.global_usings import scan_global_usings
-from repowise.core.ingestion.resolvers.dotnet.index import build_index
-from repowise.core.ingestion.resolvers.dotnet.namespace_map import declared_namespaces
+from codex_wise.core.ingestion.resolvers.dotnet.global_usings import scan_global_usings
+from codex_wise.core.ingestion.resolvers.dotnet.index import build_index
+from codex_wise.core.ingestion.resolvers.dotnet.namespace_map import declared_namespaces
 
 
 # ---------------------------------------------------------------------------
@@ -250,7 +250,7 @@ class TestProjectIndexCaching:
         (tmp_path / "Api" / "Foo.cs").write_text("namespace Foo;\nclass F {}")
 
         ctx = _ctx_for(tmp_path)
-        from repowise.core.ingestion.resolvers.dotnet.index import get_or_build_index
+        from codex_wise.core.ingestion.resolvers.dotnet.index import get_or_build_index
 
         first = get_or_build_index(ctx)
         second = get_or_build_index(ctx)

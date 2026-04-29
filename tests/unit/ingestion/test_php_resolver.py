@@ -7,9 +7,9 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.php import resolve_php_import
-from repowise.core.ingestion.resolvers.php_composer import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.php import resolve_php_import
+from codex_wise.core.ingestion.resolvers.php_composer import (
     read_composer_psr4,
     resolve_via_psr4,
 )

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.change_detector import ChangeDetector, SymbolDiff
-from repowise.core.ingestion.models import FileInfo, ParsedFile, Symbol
+from codex_wise.core.ingestion.change_detector import ChangeDetector, SymbolDiff
+from codex_wise.core.ingestion.models import FileInfo, ParsedFile, Symbol
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -185,7 +185,7 @@ class TestGetAffectedPages:
         status: str = "modified",
         symbol_diff: SymbolDiff | None = None,
     ):
-        from repowise.core.ingestion.change_detector import FileDiff
+        from codex_wise.core.ingestion.change_detector import FileDiff
 
         return FileDiff(
             path=path,
@@ -256,7 +256,7 @@ class TestGetAffectedPages:
 
     def test_rename_patch_subset_of_regenerate(self, tmp_path: Path) -> None:
         """rename_patch pages must appear in regenerate."""
-        from repowise.core.ingestion.change_detector import FileDiff, SymbolRename
+        from codex_wise.core.ingestion.change_detector import FileDiff, SymbolRename
 
         d = self._detector(tmp_path)
         g = nx.DiGraph()

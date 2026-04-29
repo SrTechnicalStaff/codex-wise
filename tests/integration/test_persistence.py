@@ -17,15 +17,15 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.generation.context_assembler import ContextAssembler
-from repowise.core.generation.job_system import JobSystem
-from repowise.core.generation.models import GeneratedPage, GenerationConfig
-from repowise.core.generation.page_generator import PageGenerator
-from repowise.core.ingestion.graph import GraphBuilder
-from repowise.core.ingestion.models import PackageInfo, RepoStructure
-from repowise.core.ingestion.parser import ASTParser
-from repowise.core.ingestion.traverser import FileTraverser
-from repowise.core.persistence import (
+from codex_wise.core.generation.context_assembler import ContextAssembler
+from codex_wise.core.generation.job_system import JobSystem
+from codex_wise.core.generation.models import GeneratedPage, GenerationConfig
+from codex_wise.core.generation.page_generator import PageGenerator
+from codex_wise.core.ingestion.graph import GraphBuilder
+from codex_wise.core.ingestion.models import PackageInfo, RepoStructure
+from codex_wise.core.ingestion.parser import ASTParser
+from codex_wise.core.ingestion.traverser import FileTraverser
+from codex_wise.core.persistence import (
     FullTextSearch,
     InMemoryVectorStore,
     MockEmbedder,
@@ -39,7 +39,7 @@ from repowise.core.persistence import (
     upsert_page_from_generated,
     upsert_repository,
 )
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.providers.llm.mock import MockProvider
 
 SAMPLE_REPO = Path(__file__).parents[1] / "fixtures" / "sample_repo"
 
@@ -264,7 +264,7 @@ class TestVersionHistory:
         gp = pages[0]
 
         # Store a second version with modified content
-        from repowise.core.persistence.crud import upsert_page
+        from codex_wise.core.persistence.crud import upsert_page
 
         async with sf() as session:
             await upsert_page(
@@ -344,7 +344,7 @@ class TestFullTextSearch:
         assert first_page.page_id in page_ids
 
     async def test_full_text_search_returns_search_results(self, persisted, fts):
-        from repowise.core.persistence.search import SearchResult
+        from codex_wise.core.persistence.search import SearchResult
 
         results = await fts.search("module", limit=5)
         assert len(results) <= 5
@@ -396,7 +396,7 @@ class TestVectorSearch:
         assert len(results) > 0
 
     async def test_vector_search_result_has_required_fields(self, vector_store):
-        from repowise.core.persistence.search import SearchResult
+        from codex_wise.core.persistence.search import SearchResult
 
         results = await vector_store.search("function", limit=3)
         for r in results:
@@ -424,7 +424,7 @@ class TestVectorSearch:
 
 class TestGenerationJob:
     async def test_job_completed_status(self, persisted, sf):
-        from repowise.core.persistence import get_generation_job
+        from codex_wise.core.persistence import get_generation_job
 
         async with sf() as session:
             job = await get_generation_job(session, persisted["job_id"])
@@ -435,7 +435,7 @@ class TestGenerationJob:
         assert job.finished_at is not None
 
     async def test_job_started_at_set(self, persisted, sf):
-        from repowise.core.persistence import get_generation_job
+        from codex_wise.core.persistence import get_generation_job
 
         async with sf() as session:
             job = await get_generation_job(session, persisted["job_id"])
@@ -443,7 +443,7 @@ class TestGenerationJob:
         assert job.started_at is not None
 
     async def test_job_total_pages_matches_generated(self, persisted, sf):
-        from repowise.core.persistence import get_generation_job
+        from codex_wise.core.persistence import get_generation_job
 
         async with sf() as session:
             job = await get_generation_job(session, persisted["job_id"])

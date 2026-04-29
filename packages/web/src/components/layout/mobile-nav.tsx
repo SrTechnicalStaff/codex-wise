@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import {
   Menu,
   Activity,
@@ -102,29 +101,21 @@ export function MobileNav({ repos = [], workspace }: MobileNavProps) {
         <Menu className="h-5 w-5" />
       </Button>
       <div className="flex items-center gap-2 min-w-0">
-        <Image
-          src="/repowise-logo.png"
-          alt="repowise"
-          width={24}
-          height={24}
-          className="shrink-0 drop-shadow-[0_0_8px_rgba(245,149,32,0.3)]"
-        />
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[10px] font-semibold text-[var(--color-accent-primary)]">
+          CW
+        </span>
         <span className="text-base font-semibold text-[var(--color-text-primary)] tracking-tight truncate">
-          repowise
+          Codex Wise
         </span>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="p-0">
           <SheetHeader className="border-b border-[var(--color-border-default)] h-14 flex-row items-center gap-3 py-0 px-4">
-            <Image
-              src="/repowise-logo.png"
-              alt="repowise"
-              width={28}
-              height={28}
-              className="shrink-0 drop-shadow-[0_0_8px_rgba(245,149,32,0.3)]"
-            />
-            <SheetTitle className="text-base">repowise</SheetTitle>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[11px] font-semibold text-[var(--color-accent-primary)]">
+              CW
+            </span>
+            <SheetTitle className="text-base">Codex Wise</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="flex-1">
@@ -257,7 +248,7 @@ export function MobileNav({ repos = [], workspace }: MobileNavProps) {
           </ScrollArea>
 
           <div className="border-t border-[var(--color-border-default)] px-4 py-3">
-            <p className="text-xs text-[var(--color-text-tertiary)]">repowise v0.1.0</p>
+            <p className="text-xs text-[var(--color-text-tertiary)]">Codex Wise v0.1.0</p>
           </div>
         </SheetContent>
       </Sheet>

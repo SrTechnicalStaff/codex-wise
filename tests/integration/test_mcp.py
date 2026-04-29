@@ -13,8 +13,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.models import (
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.models import (
     DeadCodeFinding,
     GitMetadata,
     GraphEdge,
@@ -23,9 +23,9 @@ from repowise.core.persistence.models import (
     Repository,
     WikiSymbol,
 )
-from repowise.core.persistence.search import FullTextSearch
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
+from codex_wise.core.persistence.search import FullTextSearch
+from codex_wise.core.persistence.vector_store import InMemoryVectorStore
+from codex_wise.core.providers.embedding.base import MockEmbedder
 
 _NOW = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
 
@@ -317,7 +317,7 @@ async def mcp_env():
     )
 
     # Configure MCP globals
-    import repowise.server.mcp_server as mcp_mod
+    import codex_wise.server.mcp_server as mcp_mod
 
     mcp_mod._session_factory = factory
     mcp_mod._fts = fts
@@ -346,7 +346,7 @@ async def mcp_env():
 @pytest.mark.asyncio
 async def test_mcp_full_exploration_flow(mcp_env):
     """Test the typical MCP exploration flow: overview → get_context for module/file/symbol."""
-    from repowise.server.mcp_server import get_context, get_overview
+    from codex_wise.server.mcp_server import get_context, get_overview
 
     # Step 1: Get overview
     overview = await get_overview()
@@ -383,7 +383,7 @@ async def test_mcp_full_exploration_flow(mcp_env):
 @pytest.mark.asyncio
 async def test_mcp_git_intelligence_flow(mcp_env):
     """Test git intelligence via get_context and get_risk."""
-    from repowise.server.mcp_server import get_context, get_risk
+    from codex_wise.server.mcp_server import get_context, get_risk
 
     # File context with ownership and history
     ctx = await get_context(["src/auth/login.py"], include=["ownership", "last_change"])
@@ -404,7 +404,7 @@ async def test_mcp_git_intelligence_flow(mcp_env):
 @pytest.mark.asyncio
 async def test_mcp_dead_code_and_freshness_flow(mcp_env):
     """Test dead code tool and freshness via get_context."""
-    from repowise.server.mcp_server import get_context, get_dead_code
+    from codex_wise.server.mcp_server import get_context, get_dead_code
 
     # Dead code
     dead = await get_dead_code()
@@ -421,7 +421,7 @@ async def test_mcp_dead_code_and_freshness_flow(mcp_env):
 @pytest.mark.asyncio
 async def test_mcp_search_flow(mcp_env):
     """Test semantic search."""
-    from repowise.server.mcp_server import search_codebase
+    from codex_wise.server.mcp_server import search_codebase
 
     result = await search_codebase("authentication login OAuth")
     assert "results" in result

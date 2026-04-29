@@ -1,0 +1,44 @@
+{
+  "name": "codex-wise",
+  "version": "0.4.0",
+  "description": "Local codebase intelligence for Codex and MCP-capable coding agents.",
+  "author": {
+    "name": "[TODO: Author Name]",
+    "email": "[TODO: author@example.com]",
+    "url": "[TODO: https://github.com/author]"
+  },
+  "homepage": "[TODO: https://docs.example.com/plugin]",
+  "repository": "[TODO: https://github.com/author/plugin]",
+  "license": "AGPL-3.0-only",
+  "keywords": [
+    "codex",
+    "codebase",
+    "mcp",
+    "architecture",
+    "git",
+    "dead-code"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex Wise",
+    "shortDescription": "Codebase intelligence through local MCP tools.",
+    "longDescription": "Codex Wise indexes source, git history, generated docs, architectural decisions, and dead-code findings, then exposes that context to Codex through MCP tools and skills.",
+    "developerName": "[TODO: Developer Name]",
+    "category": "Productivity",
+    "capabilities": [
+      "MCP",
+      "Read",
+      "Codebase context"
+    ],
+    "websiteURL": "[TODO: https://docs.example.com/plugin]",
+    "privacyPolicyURL": "[TODO: https://example.com/privacy]",
+    "termsOfServiceURL": "[TODO: https://example.com/terms]",
+    "defaultPrompt": [
+      "Use Codex Wise to explain this repository.",
+      "Check Codex Wise context before editing shared code.",
+      "Find architectural decisions related to this change."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

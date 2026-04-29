@@ -1,4 +1,4 @@
-"""Tests for repowise.core.workspace.scanner — repo discovery."""
+"""Tests for codex_wise.core.workspace.scanner — repo discovery."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.workspace.scanner import (
+from codex_wise.core.workspace.scanner import (
     DiscoveredRepo,
     ScanResult,
     _generate_aliases,
@@ -38,9 +38,9 @@ def _make_submodule(tmp_path: Path, rel: str) -> Path:
 
 
 def _make_indexed_repo(tmp_path: Path, rel: str) -> Path:
-    """Create a fake repo with an existing .repowise/ directory."""
+    """Create a fake repo with an existing Codex Wise storage directory."""
     p = _make_repo(tmp_path, rel)
-    (p / ".repowise").mkdir()
+    (p / ".codex-wise").mkdir()
     return p
 
 
@@ -161,14 +161,14 @@ class TestScanSkipDirs:
         result = scan_for_repos(tmp_path)
         assert len(result.repos) == 0
 
-    def test_does_not_skip_repowise_dir(self, tmp_path: Path) -> None:
-        """The .repowise directory itself should not be skipped during scanning."""
+    def test_does_not_skip_storage_dir(self, tmp_path: Path) -> None:
+        """The storage directory itself should not be skipped during scanning."""
         _make_repo(tmp_path, "myrepo")
-        (tmp_path / "myrepo" / ".repowise").mkdir()
+        (tmp_path / "myrepo" / ".codex-wise").mkdir()
 
         result = scan_for_repos(tmp_path)
         assert len(result.repos) == 1
-        assert result.repos[0].has_repowise is True
+        assert result.repos[0].has_codex_wise is True
 
 
 # ---------------------------------------------------------------------------
@@ -208,15 +208,15 @@ class TestScanSubmodules:
 
 
 class TestScanMetadata:
-    def test_has_repowise_detected(self, tmp_path: Path) -> None:
+    def test_has_codex_wise_detected(self, tmp_path: Path) -> None:
         _make_indexed_repo(tmp_path, "indexed-repo")
         _make_repo(tmp_path, "new-repo")
 
         result = scan_for_repos(tmp_path)
         indexed = next(r for r in result.repos if r.name == "indexed-repo")
         new = next(r for r in result.repos if r.name == "new-repo")
-        assert indexed.has_repowise is True
-        assert new.has_repowise is False
+        assert indexed.has_codex_wise is True
+        assert new.has_codex_wise is False
 
     def test_paths_are_absolute(self, tmp_path: Path) -> None:
         _make_repo(tmp_path, "myrepo")

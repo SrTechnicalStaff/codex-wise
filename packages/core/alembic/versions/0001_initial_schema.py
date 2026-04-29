@@ -1,4 +1,4 @@
-"""Initial repowise schema.
+"""Initial Codex Wise schema.
 
 Creates all 8 tables.  For PostgreSQL also:
 - Installs the pgvector extension.

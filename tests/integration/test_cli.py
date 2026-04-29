@@ -7,7 +7,7 @@ import shutil
 import pytest
 from click.testing import CliRunner
 
-from repowise.cli.main import cli
+from codex_wise.cli.main import cli
 
 
 @pytest.fixture
@@ -21,9 +21,9 @@ def work_repo(tmp_path, sample_repo_path, monkeypatch):
     dest = tmp_path / "repo"
     shutil.copytree(sample_repo_path, dest)
     # Point the DB at the repo-local path so tests can assert on its existence
-    db_path = dest / ".repowise" / "wiki.db"
+    db_path = dest / ".codex-wise" / "wiki.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("REPOWISE_DB_URL", f"sqlite+aiosqlite:///{db_path}")
+    monkeypatch.setenv("CODEX_WISE_DB_URL", f"sqlite+aiosqlite:///{db_path}")
     return dest
 
 
@@ -43,7 +43,7 @@ class TestInitDryRun:
         assert "Generation Plan" in result.output
         assert "Dry run" in result.output
         # No DB should be created
-        assert not (work_repo / ".repowise" / "wiki.db").exists()
+        assert not (work_repo / ".codex-wise" / "wiki.db").exists()
 
 
 class TestInitFullMock:
@@ -54,8 +54,8 @@ class TestInitFullMock:
             catch_exceptions=False,
         )
         assert result.exit_code == 0, result.output
-        assert (work_repo / ".repowise" / "wiki.db").exists()
-        assert (work_repo / ".repowise" / "state.json").exists()
+        assert (work_repo / ".codex-wise" / "wiki.db").exists()
+        assert (work_repo / ".codex-wise" / "state.json").exists()
         assert "init complete" in result.output
 
 
@@ -69,15 +69,14 @@ class TestInitDefaultDbLocation:
     ):
         work_repo = tmp_path / "repo"
         shutil.copytree(sample_repo_path, work_repo)
-        monkeypatch.delenv("REPOWISE_DB_URL", raising=False)
-        monkeypatch.delenv("REPOWISE_DATABASE_URL", raising=False)
+        monkeypatch.delenv("CODEX_WISE_DB_URL", raising=False)
         result = runner.invoke(
             cli,
             ["init", str(work_repo), "--provider", "mock", "--yes"],
             catch_exceptions=False,
         )
         assert result.exit_code == 0, result.output
-        assert (work_repo / ".repowise" / "wiki.db").exists()
+        assert (work_repo / ".codex-wise" / "wiki.db").exists()
 
 
 class TestInitIdempotent:
@@ -118,7 +117,7 @@ class TestDoctorAfterInit:
             catch_exceptions=False,
         )
         assert result.exit_code == 0, result.output
-        assert "repowise Doctor" in result.output
+        assert "Codex Wise Doctor" in result.output
 
 
 class TestSearchFulltext:

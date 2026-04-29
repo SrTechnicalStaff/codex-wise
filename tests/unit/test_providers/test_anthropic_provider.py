@@ -11,8 +11,8 @@ import pytest
 
 pytest.importorskip("anthropic", reason="anthropic SDK not installed")
 
-from repowise.core.providers.llm.anthropic import AnthropicProvider
-from repowise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
+from codex_wise.core.providers.llm.anthropic import AnthropicProvider
+from codex_wise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
 
 # ---------------------------------------------------------------------------
 # Construction

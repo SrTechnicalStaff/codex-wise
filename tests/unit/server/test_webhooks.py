@@ -41,9 +41,9 @@ async def test_github_webhook_valid_signature(client: AsyncClient) -> None:
     payload = json.dumps({"ref": "refs/heads/main", "repository": {}})
     sig = "sha256=" + hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 
-    with patch.dict(os.environ, {"REPOWISE_GITHUB_WEBHOOK_SECRET": ""}):
+    with patch.dict(os.environ, {"CODEX_WISE_GITHUB_WEBHOOK_SECRET": ""}):
         # Patch the module-level variable
-        import repowise.server.routers.webhooks as wh_mod
+        import codex_wise.server.routers.webhooks as wh_mod
 
         original_secret = wh_mod._GITHUB_SECRET
         wh_mod._GITHUB_SECRET = secret
@@ -65,7 +65,7 @@ async def test_github_webhook_valid_signature(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_github_webhook_invalid_signature(client: AsyncClient) -> None:
     """With a secret configured, an invalid signature is rejected."""
-    import repowise.server.routers.webhooks as wh_mod
+    import codex_wise.server.routers.webhooks as wh_mod
 
     original_secret = wh_mod._GITHUB_SECRET
     wh_mod._GITHUB_SECRET = "real-secret"
@@ -107,7 +107,7 @@ async def test_gitlab_webhook_no_token(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_gitlab_webhook_invalid_token(client: AsyncClient) -> None:
     """With a token configured, wrong token is rejected."""
-    import repowise.server.routers.webhooks as wh_mod
+    import codex_wise.server.routers.webhooks as wh_mod
 
     original_token = wh_mod._GITLAB_TOKEN
     wh_mod._GITLAB_TOKEN = "correct-token"

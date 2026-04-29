@@ -6,8 +6,8 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-from repowise.core.ingestion.graph import GraphBuilder
-from repowise.core.ingestion.models import FileInfo, Import, ParsedFile
+from codex_wise.core.ingestion.graph import GraphBuilder
+from codex_wise.core.ingestion.models import FileInfo, Import, ParsedFile
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -342,7 +342,7 @@ class TestTypeScriptImports:
         """Non-relative import resolved via TsconfigResolver instead of external:."""
         import json
 
-        from repowise.core.ingestion.tsconfig_resolver import TsconfigResolver
+        from codex_wise.core.ingestion.tsconfig_resolver import TsconfigResolver
 
         # Write a tsconfig with @/* -> ./src/*
         tsconfig = tmp_path / "tsconfig.json"
@@ -380,7 +380,7 @@ class TestTypeScriptImports:
         """Unmatched alias still creates external: node."""
         import json
 
-        from repowise.core.ingestion.tsconfig_resolver import TsconfigResolver
+        from codex_wise.core.ingestion.tsconfig_resolver import TsconfigResolver
 
         tsconfig = tmp_path / "tsconfig.json"
         tsconfig.write_text(

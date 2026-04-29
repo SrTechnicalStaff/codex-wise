@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from repowise.core.generation.models import (
+from codex_wise.core.generation.models import (
     ConfidenceDecayResult,
     GeneratedPage,
     GenerationConfig,

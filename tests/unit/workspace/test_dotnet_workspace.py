@@ -14,12 +14,12 @@ from __future__ import annotations
 from pathlib import Path
 from textwrap import dedent
 
-from repowise.core.workspace.cross_repo import (
+from codex_wise.core.workspace.cross_repo import (
     _scan_csproj,
     detect_package_dependencies,
 )
-from repowise.core.workspace.extractors.grpc_extractor import GrpcExtractor
-from repowise.core.workspace.extractors.http_extractor import HttpExtractor
+from codex_wise.core.workspace.extractors.grpc_extractor import GrpcExtractor
+from codex_wise.core.workspace.extractors.http_extractor import HttpExtractor
 
 
 # ---------------------------------------------------------------------------

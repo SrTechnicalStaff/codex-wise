@@ -6,8 +6,8 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.go import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.go import (
     read_go_modules,
     resolve_go_import,
 )

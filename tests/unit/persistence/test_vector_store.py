@@ -11,7 +11,7 @@ import math
 
 import pytest
 
-from repowise.core.providers.embedding.base import Embedder, MockEmbedder
+from codex_wise.core.providers.embedding.base import Embedder, MockEmbedder
 
 # ---------------------------------------------------------------------------
 # MockEmbedder
@@ -232,7 +232,7 @@ async def test_in_memory_store_close_clears(in_memory_vector_store):
 @pytest.mark.asyncio
 async def test_lancedb_vector_store_basic(tmp_path, mock_embedder):
     lancedb = pytest.importorskip("lancedb")  # noqa: F841
-    from repowise.core.persistence.vector_store import LanceDBVectorStore
+    from codex_wise.core.persistence.vector_store import LanceDBVectorStore
 
     store = LanceDBVectorStore(str(tmp_path / "lance"), mock_embedder)
     try:

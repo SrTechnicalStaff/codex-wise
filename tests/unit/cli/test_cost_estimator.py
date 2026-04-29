@@ -1,11 +1,11 @@
-"""Unit tests for repowise.cli.cost_estimator."""
+"""Unit tests for codex_wise.cli.cost_estimator."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
-from repowise.cli.cost_estimator import (
+from codex_wise.cli.cost_estimator import (
     PageTypePlan,
     build_generation_plan,
     estimate_cost,

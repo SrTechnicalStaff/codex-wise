@@ -6,9 +6,9 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.kotlin import resolve_kotlin_import
-from repowise.core.ingestion.resolvers.kotlin_gradle import build_kotlin_index
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.kotlin import resolve_kotlin_import
+from codex_wise.core.ingestion.resolvers.kotlin_gradle import build_kotlin_index
 
 
 def _ctx(repo: Path, paths: list[str]) -> ResolverContext:

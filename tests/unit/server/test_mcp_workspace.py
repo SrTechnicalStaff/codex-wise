@@ -14,18 +14,18 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.models import (
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.models import (
     DeadCodeFinding,
     DecisionRecord,
     GraphNode,
     Page,
     Repository,
 )
-from repowise.core.persistence.search import FullTextSearch
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
-from repowise.core.workspace.registry import RepoContext, RepoRegistry
+from codex_wise.core.persistence.search import FullTextSearch
+from codex_wise.core.persistence.vector_store import InMemoryVectorStore
+from codex_wise.core.providers.embedding.base import MockEmbedder
+from codex_wise.core.workspace.registry import RepoContext
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -121,7 +121,7 @@ class _MockRegistry:
 @pytest.fixture
 async def workspace_mcp():
     """Set up a two-repo workspace for MCP testing."""
-    import repowise.server.mcp_server as mcp_mod
+    import codex_wise.server.mcp_server as mcp_mod
 
     # Create two repo contexts with distinct data
     backend_ctx = await _make_repo_context(
@@ -285,7 +285,7 @@ async def workspace_mcp():
 
 @pytest.mark.asyncio
 async def test_get_overview_default_includes_workspace_footer(workspace_mcp):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     result = await get_overview()
     assert result["title"] == "Backend Overview"
@@ -298,7 +298,7 @@ async def test_get_overview_default_includes_workspace_footer(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_overview_specific_repo(workspace_mcp):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     result = await get_overview(repo="frontend")
     assert result["title"] == "Frontend Overview"
@@ -307,7 +307,7 @@ async def test_get_overview_specific_repo(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_overview_repo_all(workspace_mcp):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     result = await get_overview(repo="all")
     assert result["workspace"] is True
@@ -328,7 +328,7 @@ async def test_get_overview_repo_all(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_search_repo_all_returns_tagged_results(workspace_mcp):
-    from repowise.server.mcp_server import search_codebase
+    from codex_wise.server.mcp_server import search_codebase
 
     # FTS search — both repos should be queried
     result = await search_codebase(query="overview", repo="all")
@@ -339,7 +339,7 @@ async def test_search_repo_all_returns_tagged_results(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_search_specific_repo(workspace_mcp):
-    from repowise.server.mcp_server import search_codebase
+    from codex_wise.server.mcp_server import search_codebase
 
     result = await search_codebase(query="React", repo="frontend")
     assert "results" in result
@@ -352,7 +352,7 @@ async def test_search_specific_repo(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_dead_code_repo_all(workspace_mcp):
-    from repowise.server.mcp_server import get_dead_code
+    from codex_wise.server.mcp_server import get_dead_code
 
     result = await get_dead_code(repo="all")
     assert result.get("workspace") is True or "summary" in result
@@ -363,7 +363,7 @@ async def test_get_dead_code_repo_all(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_dead_code_specific_repo(workspace_mcp):
-    from repowise.server.mcp_server import get_dead_code
+    from codex_wise.server.mcp_server import get_dead_code
 
     result = await get_dead_code(repo="backend")
     assert "summary" in result or "tiers" in result
@@ -376,7 +376,7 @@ async def test_get_dead_code_specific_repo(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_why_repo_all(workspace_mcp):
-    from repowise.server.mcp_server import get_why
+    from codex_wise.server.mcp_server import get_why
 
     result = await get_why(query="REST", repo="all")
     # Should search across both repos
@@ -385,7 +385,7 @@ async def test_get_why_repo_all(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_get_why_specific_repo(workspace_mcp):
-    from repowise.server.mcp_server import get_why
+    from codex_wise.server.mcp_server import get_why
 
     result = await get_why(query="React", repo="frontend")
     assert isinstance(result, dict)
@@ -398,7 +398,7 @@ async def test_get_why_specific_repo(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_unsupported_repo_all_get_context(workspace_mcp):
-    from repowise.server.mcp_server import get_context
+    from codex_wise.server.mcp_server import get_context
 
     result = await get_context(targets=["src/api/server.py"], repo="all")
     assert "error" in result
@@ -412,7 +412,7 @@ async def test_unsupported_repo_all_get_context(workspace_mcp):
 
 @pytest.mark.asyncio
 async def test_invalid_repo_raises(workspace_mcp):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     with pytest.raises(ValueError, match="Unknown repo"):
         await get_overview(repo="nonexistent")
@@ -426,15 +426,22 @@ async def test_invalid_repo_raises(workspace_mcp):
 @pytest.mark.asyncio
 async def test_single_repo_mode_no_workspace():
     """When _registry is None, tools should use _state globals directly."""
-    import repowise.server.mcp_server as mcp_mod
+    import codex_wise.server.mcp_server as mcp_mod
 
     # Ensure no registry is set
     assert mcp_mod._registry is None
 
     # We can't easily call tools without DB, but verify the helper works
-    from repowise.server.mcp_server._helpers import _is_workspace_mode
+    from codex_wise.server.mcp_server._helpers import _is_workspace_mode
 
     assert _is_workspace_mode() is False
+
+
+def test_mcp_server_metadata_is_codex_wise():
+    from codex_wise.server.mcp_server import mcp
+
+    assert mcp.name == "codex-wise"
+    assert "Codex Wise" in mcp.instructions
 
 
 # ---------------------------------------------------------------------------
@@ -478,14 +485,14 @@ def enricher_data(tmp_path):
 
 
 def test_enricher_loads_and_has_data(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     assert enricher.has_data is True
 
 
 def test_enricher_get_cross_repo_partners(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     partners = enricher.get_cross_repo_partners("backend", "src/api/server.py")
@@ -497,7 +504,7 @@ def test_enricher_get_cross_repo_partners(enricher_data):
 
 def test_enricher_bidirectional_index(enricher_data):
     """Co-change edges should be indexed from both sides."""
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     # Reverse direction
@@ -507,7 +514,7 @@ def test_enricher_bidirectional_index(enricher_data):
 
 
 def test_enricher_get_package_deps(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     deps = enricher.get_package_deps("frontend")
@@ -516,7 +523,7 @@ def test_enricher_get_package_deps(enricher_data):
 
 
 def test_enricher_get_repos_depending_on(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     # frontend depends on backend
@@ -525,7 +532,7 @@ def test_enricher_get_repos_depending_on(enricher_data):
 
 
 def test_enricher_has_cross_repo_consumers(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     consumers = enricher.has_cross_repo_consumers("backend", "src/api/server.py")
@@ -534,7 +541,7 @@ def test_enricher_has_cross_repo_consumers(enricher_data):
 
 
 def test_enricher_get_affected_repos(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     affected = enricher.get_affected_repos("backend", "src/api/server.py")
@@ -542,7 +549,7 @@ def test_enricher_get_affected_repos(enricher_data):
 
 
 def test_enricher_missing_file_returns_empty(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     assert enricher.get_cross_repo_partners("backend", "nonexistent.py") == []
@@ -550,7 +557,7 @@ def test_enricher_missing_file_returns_empty(enricher_data):
 
 
 def test_enricher_missing_json_has_no_data(tmp_path):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(tmp_path / "does_not_exist.json")
     assert enricher.has_data is False
@@ -558,7 +565,7 @@ def test_enricher_missing_json_has_no_data(tmp_path):
 
 
 def test_enricher_get_cross_repo_summary(enricher_data):
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     enricher = CrossRepoEnricher(enricher_data)
     summary = enricher.get_cross_repo_summary()
@@ -575,8 +582,8 @@ def test_enricher_get_cross_repo_summary(enricher_data):
 @pytest.fixture
 async def workspace_mcp_with_enricher(workspace_mcp, enricher_data):
     """Extend workspace_mcp with a cross-repo enricher."""
-    import repowise.server.mcp_server as mcp_mod
-    from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+    import codex_wise.server.mcp_server as mcp_mod
+    from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
     mcp_mod._cross_repo_enricher = CrossRepoEnricher(enricher_data)
     yield
@@ -585,7 +592,7 @@ async def workspace_mcp_with_enricher(workspace_mcp, enricher_data):
 
 @pytest.mark.asyncio
 async def test_overview_footer_includes_cross_repo(workspace_mcp_with_enricher):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     result = await get_overview()
     assert "workspace" in result
@@ -596,7 +603,7 @@ async def test_overview_footer_includes_cross_repo(workspace_mcp_with_enricher):
 
 @pytest.mark.asyncio
 async def test_overview_all_includes_cross_repo_topology(workspace_mcp_with_enricher):
-    from repowise.server.mcp_server import get_overview
+    from codex_wise.server.mcp_server import get_overview
 
     result = await get_overview(repo="all")
     assert "cross_repo_topology" in result

@@ -27,7 +27,7 @@ DOTNET_WORKSPACE = Path(__file__).parent.parent / "fixtures" / "dotnet_workspace
 @pytest.fixture(scope="module")
 def ingest_solution():
     """Run the ingestion pipeline against the dotnet_solution fixture."""
-    from repowise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
+    from codex_wise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
 
     traverser = FileTraverser(DOTNET_SOLUTION)
     parser = ASTParser()
@@ -122,7 +122,7 @@ class TestSolutionIngestion:
 class TestCrossRepoWorkspace:
     def test_project_ref_and_internal_nuget_detected(self) -> None:
         """The two-repo .NET workspace produces both kinds of cross-repo deps."""
-        from repowise.core.workspace.cross_repo import detect_package_dependencies
+        from codex_wise.core.workspace.cross_repo import detect_package_dependencies
 
         repos = {
             "api-service": DOTNET_WORKSPACE / "api-service",

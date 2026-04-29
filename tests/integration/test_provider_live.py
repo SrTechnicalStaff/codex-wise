@@ -15,7 +15,7 @@ import os
 
 import pytest
 
-from repowise.core.providers.llm.base import GeneratedResponse
+from codex_wise.core.providers.llm.base import GeneratedResponse
 
 # ---------------------------------------------------------------------------
 # OpenAI
@@ -27,7 +27,7 @@ OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 @pytest.mark.skipif(not OPENAI_KEY, reason="OPENAI_API_KEY not set")
 @pytest.mark.parametrize("model", ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"])
 async def test_openai_live(model):
-    from repowise.core.providers.llm.openai import OpenAIProvider
+    from codex_wise.core.providers.llm.openai import OpenAIProvider
 
     provider = OpenAIProvider(api_key=OPENAI_KEY, model=model)
     result = await provider.generate(
@@ -70,7 +70,7 @@ except ImportError:
     ],
 )
 async def test_gemini_live(model):
-    from repowise.core.providers.llm.gemini import GeminiProvider
+    from codex_wise.core.providers.llm.gemini import GeminiProvider
 
     provider = GeminiProvider(api_key=GEMINI_KEY, model=model)
     result = await provider.generate(
@@ -95,7 +95,7 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 @pytest.mark.skipif(not ANTHROPIC_KEY, reason="ANTHROPIC_API_KEY not set")
 @pytest.mark.parametrize("model", ["claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5"])
 async def test_anthropic_live(model):
-    from repowise.core.providers.llm.anthropic import AnthropicProvider
+    from codex_wise.core.providers.llm.anthropic import AnthropicProvider
 
     provider = AnthropicProvider(api_key=ANTHROPIC_KEY, model=model)
     result = await provider.generate(
@@ -123,7 +123,7 @@ OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
     ["anthropic/claude-sonnet-4.6", "google/gemini-3.1-flash-lite-preview"],
 )
 async def test_openrouter_live(model):
-    from repowise.core.providers.llm.openrouter import OpenRouterProvider
+    from codex_wise.core.providers.llm.openrouter import OpenRouterProvider
 
     provider = OpenRouterProvider(api_key=OPENROUTER_KEY, model=model)
     result = await provider.generate(

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import { Send, StopCircle, PanelRight, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -134,13 +133,9 @@ export function ChatInterface({ repoId, repoName }: ChatInterfaceProps) {
           <div className="flex flex-col items-center justify-center h-full gap-10 px-4">
             <div className="text-center space-y-3">
               <div className="flex items-center justify-center mb-6">
-                <Image
-                  src="/repowise-logo.png"
-                  alt="repowise"
-                  width={48}
-                  height={48}
-                  className="drop-shadow-[0_0_12px_rgba(245,149,32,0.35)]"
-                />
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)]">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
               </div>
               <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
                 Ask anything about {repoName ?? "this codebase"}

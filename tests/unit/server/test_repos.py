@@ -79,7 +79,7 @@ async def test_update_repo(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_sync_repo_returns_202(client: AsyncClient) -> None:
     repo = await create_test_repo(client)
-    with patch("repowise.server.routers.repos.execute_job", new_callable=AsyncMock):
+    with patch("codex_wise.server.routers.repos.execute_job", new_callable=AsyncMock):
         resp = await client.post(f"/api/repos/{repo['id']}/sync")
     assert resp.status_code == 202
     data = resp.json()
@@ -96,7 +96,7 @@ async def test_sync_repo_not_found(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_full_resync_returns_202(client: AsyncClient) -> None:
     repo = await create_test_repo(client)
-    with patch("repowise.server.routers.repos.execute_job", new_callable=AsyncMock):
+    with patch("codex_wise.server.routers.repos.execute_job", new_callable=AsyncMock):
         resp = await client.post(f"/api/repos/{repo['id']}/full-resync")
     assert resp.status_code == 202
     data = resp.json()
@@ -109,7 +109,7 @@ async def test_sync_duplicate_returns_409(client: AsyncClient) -> None:
     repo = await create_test_repo(client)
 
     # Mock execute_job to prevent actual background pipeline run during tests
-    with patch("repowise.server.routers.repos.execute_job", new_callable=AsyncMock):
+    with patch("codex_wise.server.routers.repos.execute_job", new_callable=AsyncMock):
         resp1 = await client.post(f"/api/repos/{repo['id']}/sync")
         assert resp1.status_code == 202
 
@@ -124,7 +124,7 @@ async def test_full_resync_duplicate_returns_409(client: AsyncClient) -> None:
     """A second full-resync while one is pending/running returns 409."""
     repo = await create_test_repo(client)
 
-    with patch("repowise.server.routers.repos.execute_job", new_callable=AsyncMock):
+    with patch("codex_wise.server.routers.repos.execute_job", new_callable=AsyncMock):
         resp1 = await client.post(f"/api/repos/{repo['id']}/full-resync")
         assert resp1.status_code == 202
 
@@ -144,7 +144,7 @@ async def test_export_wiki_returns_zip(client: AsyncClient, session) -> None:
     import zipfile
     from io import BytesIO
 
-    from repowise.core.persistence.crud import upsert_page, upsert_repository
+    from codex_wise.core.persistence.crud import upsert_page, upsert_repository
     from tests.unit.persistence.helpers import make_page_kwargs
 
     repo = await upsert_repository(session, name="export-test", local_path="/tmp/export-test")

@@ -1,8 +1,8 @@
 {
-  "name": "repowise-web",
+  "name": "codex-wise-web",
   "version": "0.3.0",
   "private": true,
-  "description": "repowise Web UI — Next.js 15 dashboard and wiki viewer",
+  "description": "Codex Wise web dashboard and wiki viewer",
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.generation.job_system import Checkpoint, JobSystem
-from repowise.core.generation.models import GenerationConfig
+from codex_wise.core.generation.job_system import Checkpoint, JobSystem
+from codex_wise.core.generation.models import GenerationConfig
 
 
 def _make_system(tmp_path: Path) -> JobSystem:

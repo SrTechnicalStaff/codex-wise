@@ -1,4 +1,4 @@
-package com.repowise.sample;
+package com.codexwise.sample;
 
 /**
  * Enum representing the four supported arithmetic operations.

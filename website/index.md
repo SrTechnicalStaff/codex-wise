@@ -4,44 +4,31 @@ title: Home
 nav_order: 1
 ---
 
-# repowise
+# Codex Wise
 
-**Codebase intelligence for developers and AI.**
+Operational codebase context for Codex.
 
-repowise generates and maintains a structured wiki for any codebase. It tracks changes, exposes everything through an MCP server, and keeps your AI coding assistant deeply informed about your code — automatically.
+Codex Wise indexes a repository or workspace, writes project-scoped Codex MCP config, and generates `AGENTS.md` from the current codebase index.
 
-[![PyPI version](https://img.shields.io/pypi/v/repowise.svg)](https://pypi.org/project/repowise/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://pypi.org/project/repowise/)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-purple.svg)](https://github.com/repowise-dev/repowise/blob/main/LICENSE)
-
----
-
-## What repowise does
-
-| Capability | Description |
-|-----------|-------------|
-| **Auto-documentation** | Module, file, and symbol-level docs generated from source code |
-| **Git intelligence** | Churn hotspots, ownership, bus factor, change patterns |
-| **Dead code detection** | Finds confirmed unused exports, functions, and types |
-| **Decision intelligence** | Captures *why* code is structured the way it is |
-| **MCP server** | 10 tools for AI assistants (Claude Code, Cursor, Windsurf, Cline) |
-| **Web dashboard** | Browse wiki, search, and explore architecture diagrams |
-| **Multi-language** | Python, TypeScript, JavaScript, Go, Rust, Java, C/C++, Kotlin, Ruby, C#, Swift, Scala, PHP |
-
----
-
-## Install in one line
+## Start
 
 ```bash
-pip install repowise
+uv tool install --editable .
+codex-wise init
+codex-wise doctor
 ```
 
----
+## What It Writes
 
-## Get started
-
-| | |
+| File | Purpose |
 |---|---|
-| [**60-second quickstart →**](getting-started) | The fastest path to a working setup. |
-| [**Core concepts →**](concepts) | Understand the four layers before diving in. |
-| [**CLI reference →**](cli-reference) | Every command, flag, and option. |
+| `.codex/config.toml` | Codex MCP server entry |
+| `AGENTS.md` | Project instructions generated from the index |
+| Local index directory | Generated database, config, state, and vector data |
+
+## References
+
+- [Getting Started](getting-started)
+- [CLI Reference](cli-reference)
+- [MCP Server](mcp-server)
+- [Configuration](configuration)

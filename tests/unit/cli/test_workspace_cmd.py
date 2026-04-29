@@ -1,4 +1,4 @@
-"""Unit tests for ``repowise workspace`` command group."""
+"""Unit tests for ``codex-wise workspace`` command group."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from repowise.cli.main import cli
+from codex_wise.cli.main import cli
 
-WORKSPACE_CONFIG_FILENAME = ".repowise-workspace.yaml"
+WORKSPACE_CONFIG_FILENAME = ".codex-wise-workspace.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ def runner():
 
 
 def _write_workspace_config(root: Path, repos: list[dict], default_repo: str | None = None) -> None:
-    """Write a minimal .repowise-workspace.yaml to *root*."""
+    """Write a minimal native workspace config to *root*."""
     data: dict = {
         "version": 1,
         "default_repo": default_repo or (repos[0]["alias"] if repos else None),
@@ -104,7 +104,7 @@ class TestWorkspaceList:
     def test_list_no_workspace_errors(self, runner, tmp_path):
         result = runner.invoke(cli, ["workspace", "list", str(tmp_path)])
         # Should exit non-zero or print a helpful error — no workspace found
-        assert result.exit_code != 0 or "No .repowise-workspace.yaml" in result.output
+        assert result.exit_code != 0 or "No .codex-wise-workspace.yaml" in result.output
 
 
 # ---------------------------------------------------------------------------
@@ -261,12 +261,12 @@ class TestWorkspaceRemove:
         # Should mention the reassignment
         assert "default" in result.output.lower() or "Note" in result.output
 
-    def test_remove_preserves_repowise_dir(self, runner, tmp_path):
+    def test_remove_preserves_codex_wise_dir(self, runner, tmp_path):
         repo_a = tmp_path / "svc-a"
         repo_a.mkdir()
-        repowise_dir = repo_a / ".repowise"
-        repowise_dir.mkdir()
-        sentinel = repowise_dir / "wiki.db"
+        codex_wise_dir = repo_a / ".codex-wise"
+        codex_wise_dir.mkdir()
+        sentinel = codex_wise_dir / "wiki.db"
         sentinel.write_text("data")
 
         _write_workspace_config(

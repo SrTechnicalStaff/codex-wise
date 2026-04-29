@@ -50,7 +50,7 @@ class TestIngestSampleRepo:
     @pytest.fixture(scope="class")
     def ingestion_result(self):
         """Run the full ingestion pipeline once and share results."""
-        from repowise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
+        from codex_wise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
 
         traverser = FileTraverser(SAMPLE_REPO)
         parser = ASTParser()

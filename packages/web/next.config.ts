@@ -5,11 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "d3"],
   },
-  images: {
-    unoptimized: true,
-  },
   async rewrites() {
-    const apiUrl = process.env.REPOWISE_API_URL || "http://localhost:7337";
+    const apiUrl = process.env.CODEX_WISE_API_URL || "http://localhost:7337";
     return [
       {
         source: "/api/:path*",

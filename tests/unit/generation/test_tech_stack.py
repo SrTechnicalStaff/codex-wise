@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from repowise.core.generation.editor_files.tech_stack import (
+from codex_wise.core.generation.editor_files.tech_stack import (
     detect_build_commands,
     detect_tech_stack,
 )

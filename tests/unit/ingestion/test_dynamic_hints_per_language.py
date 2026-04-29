@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from repowise.core.ingestion.dynamic_hints.c import CDynamicHints
-from repowise.core.ingestion.dynamic_hints.go import GoDynamicHints
-from repowise.core.ingestion.dynamic_hints.luau import LuauDynamicHints
-from repowise.core.ingestion.dynamic_hints.php import PhpDynamicHints
-from repowise.core.ingestion.dynamic_hints.ruby import RubyDynamicHints
-from repowise.core.ingestion.dynamic_hints.scala import ScalaDynamicHints
-from repowise.core.ingestion.dynamic_hints.spring import SpringDynamicHints
-from repowise.core.ingestion.dynamic_hints.swift import SwiftDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.c import CDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.go import GoDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.luau import LuauDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.php import PhpDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.ruby import RubyDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.scala import ScalaDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.spring import SpringDynamicHints
+from codex_wise.core.ingestion.dynamic_hints.swift import SwiftDynamicHints
 
 
 class TestSpringHints:
@@ -176,7 +176,7 @@ class TestGoHints:
 
 class TestRegistryWiring:
     def test_default_registry_includes_new_extractors(self) -> None:
-        from repowise.core.ingestion.dynamic_hints.registry import HintRegistry
+        from codex_wise.core.ingestion.dynamic_hints.registry import HintRegistry
 
         names = {ex.name for ex in HintRegistry()._extractors}
         for required in ("spring", "ruby", "php", "scala", "swift", "c", "luau", "go"):

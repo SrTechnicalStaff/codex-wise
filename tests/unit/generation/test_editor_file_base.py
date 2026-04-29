@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from repowise.core.generation.editor_files.base import BaseEditorFileGenerator
-from repowise.core.generation.editor_files.data import EditorFileData
+from codex_wise.core.generation.editor_files.base import BaseEditorFileGenerator
+from codex_wise.core.generation.editor_files.data import EditorFileData
 
 # ---------------------------------------------------------------------------
 # Minimal concrete subclass for testing
@@ -14,8 +14,8 @@ from repowise.core.generation.editor_files.data import EditorFileData
 
 class _TestGenerator(BaseEditorFileGenerator):
     filename = "TEST.md"
-    marker_tag = "REPOWISE"
-    template_name = "claude_md.j2"
+    marker_tag = "CODEX_WISE"
+    template_name = "agents_md.j2"
     user_placeholder = "# TEST.md\n\n<!-- user content here -->\n"
 
 
@@ -56,8 +56,8 @@ def test_write_creates_new_file(gen, tmp_path):
     written = gen.write(tmp_path, data)
     assert written.exists()
     content = written.read_text(encoding="utf-8")
-    assert "<!-- REPOWISE:START" in content
-    assert "<!-- REPOWISE:END -->" in content
+    assert "<!-- CODEX_WISE:START" in content
+    assert "<!-- CODEX_WISE:END -->" in content
     assert "<!-- user content here -->" in content  # placeholder present
 
 
@@ -65,8 +65,8 @@ def test_write_new_file_has_correct_structure(gen, tmp_path):
     data = _minimal_data()
     gen.write(tmp_path, data)
     content = (tmp_path / "TEST.md").read_text(encoding="utf-8")
-    start_idx = content.index("<!-- REPOWISE:START")
-    end_idx = content.index("<!-- REPOWISE:END -->")
+    start_idx = content.index("<!-- CODEX_WISE:START")
+    end_idx = content.index("<!-- CODEX_WISE:END -->")
     assert start_idx < end_idx
     # User placeholder is BEFORE the markers
     placeholder_idx = content.index("<!-- user content here -->")
@@ -83,7 +83,7 @@ def test_write_preserves_user_content_when_no_markers(gen, tmp_path):
 
     content = target.read_text(encoding="utf-8")
     assert "Do not touch this content!" in content
-    assert "<!-- REPOWISE:START" in content
+    assert "<!-- CODEX_WISE:START" in content
 
 
 def test_write_appends_when_no_markers(gen, tmp_path):
@@ -95,7 +95,7 @@ def test_write_appends_when_no_markers(gen, tmp_path):
 
     # Existing content is BEFORE the markers
     existing_idx = content.index("# Existing")
-    marker_idx = content.index("<!-- REPOWISE:START")
+    marker_idx = content.index("<!-- CODEX_WISE:START")
     assert existing_idx < marker_idx
 
 
@@ -130,8 +130,8 @@ def test_write_replaces_only_managed_section(gen, tmp_path):
     content = target.read_text(encoding="utf-8")
 
     assert "Keep this." in content
-    assert content.count("<!-- REPOWISE:START") == 1
-    assert content.count("<!-- REPOWISE:END -->") == 1
+    assert content.count("<!-- CODEX_WISE:START") == 1
+    assert content.count("<!-- CODEX_WISE:END -->") == 1
 
 
 def test_write_is_idempotent(gen, tmp_path):

@@ -8,10 +8,10 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.framework_edges import add_framework_edges
-from repowise.core.ingestion.models import FileInfo, ParsedFile
-from repowise.core.ingestion.parser import ASTParser
-from repowise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.framework_edges import add_framework_edges
+from codex_wise.core.ingestion.models import FileInfo, ParsedFile
+from codex_wise.core.ingestion.parser import ASTParser
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
 
 
 def _file_info(rel: str, abs_path: str) -> FileInfo:

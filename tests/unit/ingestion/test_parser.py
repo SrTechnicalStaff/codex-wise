@@ -10,8 +10,8 @@ from datetime import datetime
 
 import pytest
 
-from repowise.core.ingestion.models import FileInfo
-from repowise.core.ingestion.parser import LANGUAGE_CONFIGS, ASTParser
+from codex_wise.core.ingestion.models import FileInfo
+from codex_wise.core.ingestion.parser import LANGUAGE_CONFIGS, ASTParser
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -288,7 +288,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/repowise-ai/sample/types"
+	"github.com/Codex Wise-ai/sample/types"
 )
 
 // ErrDivisionByZero is returned on division by zero.
@@ -447,7 +447,7 @@ class TestRustParser:
 # Java
 # ---------------------------------------------------------------------------
 
-JAVA_SOURCE = b"""package com.repowise.sample;
+JAVA_SOURCE = b"""package com.codex_wise.sample;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -893,7 +893,7 @@ class TestCSharpModernParser:
 
 class TestCSharpRegistryMetadata:
     def test_csharp_spec_has_manifest_files(self) -> None:
-        from repowise.core.ingestion.languages.registry import REGISTRY
+        from codex_wise.core.ingestion.languages.registry import REGISTRY
 
         spec = REGISTRY.get("csharp")
         assert spec is not None
@@ -901,7 +901,7 @@ class TestCSharpRegistryMetadata:
         assert "Directory.Build.props" in spec.manifest_files
 
     def test_csharp_spec_has_blocked_dirs(self) -> None:
-        from repowise.core.ingestion.languages.registry import REGISTRY
+        from codex_wise.core.ingestion.languages.registry import REGISTRY
 
         spec = REGISTRY.get("csharp")
         assert spec is not None
@@ -909,7 +909,7 @@ class TestCSharpRegistryMetadata:
         assert "obj" in spec.blocked_dirs
 
     def test_csharp_spec_has_generated_suffixes(self) -> None:
-        from repowise.core.ingestion.languages.registry import REGISTRY
+        from codex_wise.core.ingestion.languages.registry import REGISTRY
 
         spec = REGISTRY.get("csharp")
         assert spec is not None
@@ -917,7 +917,7 @@ class TestCSharpRegistryMetadata:
         assert ".Designer.cs" in spec.generated_suffixes
 
     def test_csharp_record_in_heritage_node_types(self) -> None:
-        from repowise.core.ingestion.languages.registry import REGISTRY
+        from codex_wise.core.ingestion.languages.registry import REGISTRY
 
         spec = REGISTRY.get("csharp")
         assert spec is not None

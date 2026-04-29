@@ -1,191 +1,126 @@
 # Quickstart
 
-Get repowise running on your codebase in under 5 minutes.
-
-> For the full CLI reference, web UI docs, MCP integration, and troubleshooting, see the [User Guide](USER_GUIDE.md).
-
----
+This guide gets the working Codex integration online: local index, Codex MCP config, and generated `AGENTS.md`.
 
 ## 1. Install
 
-```bash
-pip install "repowise[anthropic]"
-```
-
-Or substitute `openai`, `gemini`, `litellm`, or `all` depending on your LLM provider.
-
-**Requirements:** Python 3.11+, Git.
-
-## 2. Set Your API Key
+From this repository:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
+uv sync --all-packages
+uv run codex-wise --help
 ```
 
-Or `OPENAI_API_KEY`, `GEMINI_API_KEY` — whichever provider you installed.
+For a persistent editable command:
 
-On Windows PowerShell:
+```bash
+uv tool install --editable .
+codex-wise --version
+```
+
+## 2. Set A Provider Key
+
+Full documentation generation needs one provider key:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+# or
+export GEMINI_API_KEY="..."
+# or
+export ANTHROPIC_API_KEY="..."
+```
+
+PowerShell:
 
 ```powershell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
+$env:OPENAI_API_KEY = "sk-..."
 ```
+
+No key is required for analysis-only mode.
 
 ## 3. Initialize
 
 ```bash
-cd /path/to/your-repo
-repowise init
+cd /path/to/repo
+codex-wise init
 ```
 
-Repowise will walk you through an interactive setup — choose a provider, review the cost estimate, and confirm. It parses every file, builds a dependency graph, indexes git history, and generates wiki pages.
-
-A typical run on a ~500-file codebase takes 5-15 minutes.
-
-**Want to skip LLM costs?** Use `--index-only` to just parse and analyze without generating docs:
+Analysis-only:
 
 ```bash
-repowise init --index-only
+codex-wise init --index-only
 ```
 
-## 4. Explore
-
-Once init completes, you have several ways to use the wiki:
-
-**Search from the terminal:**
+Non-interactive example:
 
 ```bash
-repowise search "authentication"
-repowise search "how are errors handled" --mode semantic
+codex-wise init --provider openai --model gpt-5.4 --yes
 ```
 
-**Browse in a web UI:**
+## 4. Verify Codex Setup
 
 ```bash
-repowise serve
-# API on http://localhost:7337, Web UI on http://localhost:3000
+codex-wise doctor
+codex-wise doctor --desktop
 ```
 
-If Node.js 20+ is installed, the web UI starts automatically. Otherwise, use Docker (see below).
+The Codex section checks:
 
-**Connect to your AI editor (Claude Code, Cursor, Cline, Windsurf):**
+- `.codex/config.toml`
+- `[mcp_servers.codex_wise]`
+- command, `cwd`, timeout fields, and stdio transport
+- configured repo/workspace path
+- `AGENTS.md` and managed markers
+
+For Codex Desktop-specific setup, see [Codex Desktop](CODEX_DESKTOP.md).
+
+## 5. Use MCP
+
+The MCP server is configured for Codex in `.codex/config.toml`. To run it manually:
 
 ```bash
-repowise mcp --transport stdio
+codex-wise mcp --transport stdio
 ```
 
-> **Automatic for Claude Code:** `repowise init` already registers the MCP server and installs PreToolUse/PostToolUse hooks in `~/.claude/settings.json`. Every `Grep`/`Glob` call is automatically enriched with graph context (importers, dependencies, symbols, git signals). After git commits, the agent is notified when the wiki is stale.
+Common tool flow:
 
-## 5. Keep It in Sync
+```text
+get_overview()
+get_context(targets=["path/or/module"])
+get_risk(targets=["path/to/file"])
+search_codebase(query="topic")
+get_why(query="decision or file")
+get_dead_code()
+```
 
-After pulling changes or editing code:
+## 6. Keep It Current
 
 ```bash
-repowise update
+codex-wise update
+codex-wise watch
+codex-wise hook install
 ```
 
-Or install a post-commit hook for automatic sync:
+`update` refreshes `AGENTS.md` by default. To disable that:
 
 ```bash
-repowise hook install
+codex-wise init --no-agents-md
 ```
 
-Or run continuous sync while you work:
+or set:
+
+```yaml
+editor_files:
+  agents_md: false
+```
+
+## Workspace Mode
 
 ```bash
-repowise watch
+cd /path/to/workspace
+codex-wise init .
+codex-wise status --workspace
+codex-wise update --workspace
 ```
 
-See [Auto-Sync](AUTO_SYNC.md) for all sync methods (hooks, file watcher, GitHub/GitLab webhooks, polling).
-
----
-
-## Multi-Repo Workspace
-
-If your project spans multiple repos, initialize a workspace instead:
-
-```bash
-cd my-workspace/     # parent dir containing backend/, frontend/, shared-libs/
-repowise init .      # scans for git repos, indexes each, runs cross-repo analysis
-```
-
-Repowise will scan for git repos, prompt you to select which to index, and run cross-repo analysis (co-changes, API contracts, package dependencies). The MCP server serves all repos from a single instance.
-
-```bash
-repowise workspace list              # show repos and their status
-repowise workspace add ../new-svc    # add a repo
-repowise update --workspace          # update all stale repos
-repowise hook install --workspace    # install post-commit hooks for all repos
-```
-
-Full guide: [Workspaces](WORKSPACES.md)
-
----
-
-## Web UI
-
-Repowise includes a full web dashboard with a repository overview, wiki browser, interactive dependency graph, codebase chat, search, code ownership, hotspots, and dead code detection. In workspace mode, additional pages show a workspace dashboard, cross-repo API contracts, and co-change pairs. The overview page shows a health score, attention items, language breakdown, ownership treemap, quick actions, and a "Graph Intelligence" section with architectural communities and execution flow traces.
-
-### With Node.js installed
-
-If you have Node.js 20+, `repowise serve` auto-downloads and starts the web UI:
-
-```bash
-repowise serve
-# API: http://localhost:7337
-# Web UI: http://localhost:3000
-```
-
-The frontend is downloaded once (~50 MB) and cached in `~/.repowise/web/`.
-
-To skip the web UI and only run the API: `repowise serve --no-ui`
-
-### With Docker (no Node.js needed)
-
-```bash
-git clone https://github.com/repowise-dev/repowise.git
-cd repowise
-docker build -t repowise -f docker/Dockerfile .
-
-docker run -p 7337:7337 -p 3000:3000 \
-  -v /path/to/your-repo/.repowise:/data \
-  -e GEMINI_API_KEY=your-key \
-  -e REPOWISE_EMBEDDER=gemini \
-  repowise
-```
-
-### From source (for development)
-
-```bash
-git clone https://github.com/repowise-dev/repowise.git
-cd repowise && npm install
-
-# Terminal 1: API
-repowise serve --no-ui
-
-# Terminal 2: Frontend (with hot reload)
-REPOWISE_API_URL=http://localhost:7337 npm run dev --workspace packages/web
-```
-
----
-
-## Environment Variables
-
-| Variable | When needed | Description |
-|----------|-------------|-------------|
-| `ANTHROPIC_API_KEY` | Using Anthropic | Anthropic API key |
-| `OPENAI_API_KEY` | Using OpenAI | OpenAI API key |
-| `GEMINI_API_KEY` | Using Gemini | Google Gemini API key |
-| `REPOWISE_EMBEDDER` | Semantic search | Embedder: `gemini`, `openai`, or `mock` (default) |
-| `REPOWISE_DB_URL` | Custom database | SQLite/PostgreSQL connection string (default: `.repowise/wiki.db`) |
-| `REPOWISE_API_URL` | Frontend only | Backend URL for the web UI (default: `http://localhost:7337`) |
-
----
-
-## What's Next
-
-- **[User Guide](USER_GUIDE.md)** — full CLI reference, web UI features, MCP setup, common workflows, and troubleshooting
-- **[CLI Reference](CLI_REFERENCE.md)** — every command with every flag
-- **[MCP Tools](MCP_TOOLS.md)** — all 7 MCP tools with parameters and examples
-- **[Workspaces](WORKSPACES.md)** — multi-repo workspace setup and cross-repo intelligence
-- **[Auto-Sync](AUTO_SYNC.md)** — hooks, file watcher, webhooks, polling
-- **[Architecture](architecture/ARCHITECTURE.md)** — how repowise is built internally
+Workspace `AGENTS.md` supports MCP calls scoped with `repo="all"` or `repo="<alias>"`.

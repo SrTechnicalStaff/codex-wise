@@ -13,8 +13,8 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.analysis.dead_code import DeadCodeAnalyzer
-from repowise.core.ingestion.models import FileInfo, ParsedFile
+from codex_wise.core.analysis.dead_code import DeadCodeAnalyzer
+from codex_wise.core.ingestion.models import FileInfo, ParsedFile
 
 
 def _make_parsed(path: str, abs_path: str) -> ParsedFile:

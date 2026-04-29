@@ -11,8 +11,8 @@ import pytest
 
 pytest.importorskip("openai", reason="openai SDK not installed")
 
-from repowise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
-from repowise.core.providers.llm.openai import OpenAIProvider
+from codex_wise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
+from codex_wise.core.providers.llm.openai import OpenAIProvider
 
 # ---------------------------------------------------------------------------
 # Construction

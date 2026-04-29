@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from repowise.core.providers.llm.base import GeneratedResponse
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.providers.llm.base import GeneratedResponse
+from codex_wise.core.providers.llm.mock import MockProvider
 
 
 @pytest.fixture

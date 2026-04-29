@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/repowise-ai/sample/types"
+	"github.com/codex-wise/sample/types"
 )
 
 // ErrDivisionByZero is returned when a division-by-zero is attempted.

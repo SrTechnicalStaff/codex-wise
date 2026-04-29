@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "codex_wise": {
+      "command": "codex-wise",
+      "args": [
+        "mcp",
+        "--transport",
+        "stdio"
+      ],
+      "description": "Codex Wise: codebase context, graph, git signals, dead code, and decisions"
+    }
+  }
+}

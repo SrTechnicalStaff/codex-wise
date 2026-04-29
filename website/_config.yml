@@ -1,23 +1,16 @@
-title: repowise
-description: Codebase intelligence for developers and AI.
+title: Codex Wise
+description: Operational codebase context for Codex.
 baseurl: ""
-url: "https://repowise-dev.github.io"
+url: ""
 
 theme: just-the-docs
 
-logo: "/assets/images/logo.png"
-
 # Aux links for the upper right navigation
-aux_links:
-  "GitHub":
-    - "https://github.com/repowise-dev/repowise"
-  "PyPI":
-    - "https://pypi.org/project/repowise/"
-
+aux_links: {}
 aux_links_new_tab: true
 
 # Footer content
-footer_content: "Copyright &copy; 2025 repowise. Distributed under the <a href=\"https://github.com/repowise-dev/repowise/blob/main/LICENSE\">AGPL-3.0 License</a>."
+footer_content: "Distributed under the AGPL-3.0 License."
 
 # Color scheme
 color_scheme: dark

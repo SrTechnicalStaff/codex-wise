@@ -6,9 +6,9 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.ruby import resolve_ruby_import
-from repowise.core.ingestion.resolvers.ruby_rails import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.ruby import resolve_ruby_import
+from codex_wise.core.ingestion.resolvers.ruby_rails import (
     build_rails_index,
     camel_to_snake,
 )

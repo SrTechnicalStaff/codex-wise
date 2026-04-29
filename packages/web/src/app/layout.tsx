@@ -14,10 +14,10 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "repowise",
-    template: "%s — repowise",
+    default: "Codex Wise",
+    template: "%s — Codex Wise",
   },
-  description: "Open-source codebase documentation engine",
+  description: "Codebase context and MCP apparatus for Codex",
 };
 
 export default async function RootLayout({

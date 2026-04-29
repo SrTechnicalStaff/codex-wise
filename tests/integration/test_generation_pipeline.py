@@ -10,19 +10,19 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.generation.context_assembler import ContextAssembler
-from repowise.core.generation.job_system import JobSystem
-from repowise.core.generation.models import GenerationConfig
-from repowise.core.generation.page_generator import PageGenerator
-from repowise.core.ingestion.graph import GraphBuilder
-from repowise.core.ingestion.models import (
+from codex_wise.core.generation.context_assembler import ContextAssembler
+from codex_wise.core.generation.job_system import JobSystem
+from codex_wise.core.generation.models import GenerationConfig
+from codex_wise.core.generation.page_generator import PageGenerator
+from codex_wise.core.ingestion.graph import GraphBuilder
+from codex_wise.core.ingestion.models import (
     PackageInfo,
     ParsedFile,
     RepoStructure,
 )
-from repowise.core.ingestion.parser import ASTParser
-from repowise.core.ingestion.traverser import FileTraverser
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.ingestion.parser import ASTParser
+from codex_wise.core.ingestion.traverser import FileTraverser
+from codex_wise.core.providers.llm.mock import MockProvider
 
 SAMPLE_REPO = Path(__file__).parents[1] / "fixtures" / "sample_repo"
 
@@ -285,7 +285,7 @@ class TestGenerationPipeline:
             if src_path.exists():
                 source_map[pf.file_info.path] = src_path.read_bytes()
 
-        from repowise.core.ingestion.graph import GraphBuilder
+        from codex_wise.core.ingestion.graph import GraphBuilder
 
         builder = GraphBuilder()
         for pf in parsed_files:

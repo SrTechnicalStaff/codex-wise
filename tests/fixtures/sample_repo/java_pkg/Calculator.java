@@ -1,4 +1,4 @@
-package com.repowise.sample;
+package com.codexwise.sample;
 
 import java.util.ArrayList;
 import java.util.List;

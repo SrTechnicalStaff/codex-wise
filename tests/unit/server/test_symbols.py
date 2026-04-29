@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from repowise.core.persistence.database import get_session
-from repowise.core.persistence.models import WikiSymbol, _new_uuid
+from codex_wise.core.persistence.database import get_session
+from codex_wise.core.persistence.models import WikiSymbol, _new_uuid
 from tests.unit.server.conftest import create_test_repo
 
 

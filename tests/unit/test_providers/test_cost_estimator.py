@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from repowise.cli.cost_estimator import PageTypePlan, _lookup_cost, estimate_cost
+from codex_wise.cli.cost_estimator import PageTypePlan, _lookup_cost, estimate_cost
 
 # ---------------------------------------------------------------------------
 # Per-model pricing (input_rate, output_rate) per 1K tokens

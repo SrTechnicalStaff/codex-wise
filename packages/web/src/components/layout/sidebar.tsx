@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import {
   LayoutDashboard,
   Activity,
@@ -104,18 +103,14 @@ export function Sidebar({ repos = [], activeRepoId, workspace }: SidebarProps) {
         isIconOnly ? "w-[56px]" : "w-[260px]",
       )}
     >
-      {/* Logo */}
+      {/* Brand */}
       <div className="flex h-14 items-center gap-3 px-4">
-        <Image
-          src="/repowise-logo.png"
-          alt="repowise"
-          width={28}
-          height={28}
-          className="shrink-0 drop-shadow-[0_0_8px_rgba(245,149,32,0.3)]"
-        />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[11px] font-semibold text-[var(--color-accent-primary)]">
+          CW
+        </span>
         {!isIconOnly && (
           <span className="text-base font-semibold text-[var(--color-text-primary)] tracking-tight flex-1 truncate">
-            repowise
+            Codex Wise
           </span>
         )}
         <button
@@ -271,7 +266,7 @@ export function Sidebar({ repos = [], activeRepoId, workspace }: SidebarProps) {
       {!isIconOnly && (
         <div className="border-t border-[var(--color-border-default)] px-4 py-3">
           <p className="text-xs text-[var(--color-text-tertiary)]">
-            repowise v0.1.0
+            Codex Wise v0.1.0
           </p>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { apiPost } from "./client";
 
 // ---------------------------------------------------------------------------
-// Types (mirror packages/server/src/repowise/server/schemas.py BlastRadius*)
+// Types (mirror packages/server/src/codex_wise/server/schemas.py BlastRadius*)
 // ---------------------------------------------------------------------------
 
 export interface DirectRiskEntry {

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import networkx as nx
 
-from repowise.core.generation.context_assembler import (
+from codex_wise.core.generation.context_assembler import (
     ContextAssembler,
     FilePageContext,
     SccPageContext,
 )
-from repowise.core.generation.models import GenerationConfig
-from repowise.core.ingestion.models import (
+from codex_wise.core.generation.models import GenerationConfig
+from codex_wise.core.ingestion.models import (
     ParsedFile,
 )
 
