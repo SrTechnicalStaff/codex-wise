@@ -1,7 +1,7 @@
 {
-  "name": "[TODO: marketplace-name]",
+  "name": "codex-wise-local",
   "interface": {
-    "displayName": "[TODO: Marketplace Display Name]"
+    "displayName": "Codex Wise Local"
   },
   "plugins": [
     {

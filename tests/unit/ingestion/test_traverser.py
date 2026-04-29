@@ -38,6 +38,9 @@ class TestLanguageDetection:
     def test_java_extension(self, tmp_path: Path) -> None:
         assert _detect_language(tmp_path / "Calculator.java") == "java"
 
+    def test_dart_extension(self, tmp_path: Path) -> None:
+        assert _detect_language(tmp_path / "main.dart") == "dart"
+
     def test_cpp_extension(self, tmp_path: Path) -> None:
         assert _detect_language(tmp_path / "calc.cpp") == "cpp"
 
@@ -347,10 +350,12 @@ class TestTraversalStats:
         (tmp_path / "a.py").write_text("pass")
         (tmp_path / "b.py").write_text("pass")
         (tmp_path / "c.ts").write_text("const x = 1;")
+        (tmp_path / "main.dart").write_text("void main() {}")
         traverser = FileTraverser(tmp_path)
         list(traverser.traverse())
         assert traverser.stats.lang_counts.get("python") == 2
         assert traverser.stats.lang_counts.get("typescript") == 1
+        assert traverser.stats.lang_counts.get("dart") == 1
 
     def test_stats_extra_exclude(self, tmp_path: Path) -> None:
         (tmp_path / "src").mkdir()

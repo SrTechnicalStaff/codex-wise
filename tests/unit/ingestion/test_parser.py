@@ -1138,6 +1138,93 @@ class TestPhpParser:
 
 
 # ---------------------------------------------------------------------------
+# Dart
+# ---------------------------------------------------------------------------
+
+DART_SOURCE = b"""\
+import 'package:flutter/material.dart';
+import './models.dart' as models;
+
+class Calculator extends BaseCalculator implements Computable {
+  final String name;
+  Calculator(this.name);
+
+  double add(double x, double y) {
+    return x + y;
+  }
+
+  void _helper() {}
+}
+
+enum Operation { add, subtract }
+
+abstract class Computable {
+  double compute();
+}
+
+String formatResult(double value) => value.toStringAsFixed(2);
+"""
+
+
+pytest.importorskip("tree_sitter_language_pack", reason="run `uv sync --all-packages`")
+
+
+class TestDartParser:
+    def test_finds_class(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        classes = [s for s in result.symbols if s.kind == "class"]
+        assert any(s.name == "Calculator" for s in classes)
+
+    def test_finds_methods_and_constructor(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        methods = [s for s in result.symbols if s.kind == "method"]
+        assert any(s.name == "Calculator" for s in methods)
+        assert any(s.name == "add" for s in methods)
+
+    def test_finds_top_level_function(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        functions = [s for s in result.symbols if s.kind == "function"]
+        assert any(s.name == "formatResult" for s in functions)
+
+    def test_private_visibility_by_underscore(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        helper = next((s for s in result.symbols if s.name == "_helper"), None)
+        assert helper is not None
+        assert helper.visibility == "private"
+
+    def test_parses_imports_and_aliases(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        modules = {imp.module_path for imp in result.imports}
+        assert "package:flutter/material.dart" in modules
+        models_import = next(imp for imp in result.imports if imp.module_path == "./models.dart")
+        assert "models" in models_import.imported_names
+        assert any(binding.local_name == "models" for binding in models_import.bindings)
+
+    def test_extracts_calls(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        calls = {(c.target_name, c.receiver_name) for c in result.calls}
+        assert ("toStringAsFixed", "value") in calls
+
+    def test_extracts_heritage(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        heritage = {(h.child_name, h.parent_name, h.kind) for h in result.heritage}
+        assert ("Calculator", "BaseCalculator", "extends") in heritage
+        assert ("Calculator", "Computable", "implements") in heritage
+
+    def test_no_parse_errors(self, parser: ASTParser) -> None:
+        fi = _make_file_info("dart_pkg/lib/calculator.dart", "dart")
+        result = parser.parse_file(fi, DART_SOURCE)
+        assert result.parse_errors == []
+
+
+# ---------------------------------------------------------------------------
 # Luau (issue #52 — Roblox/Rojo support)
 # ---------------------------------------------------------------------------
 
@@ -1186,7 +1273,7 @@ class TestLanguageConfigs:
         expected = {
             "python", "typescript", "javascript", "go", "rust",
             "java", "cpp", "c", "kotlin", "ruby", "csharp", "swift",
-            "scala", "php", "luau",
+            "scala", "php", "dart", "luau",
         }
         for lang in expected:
             assert lang in LANGUAGE_CONFIGS, f"Missing config for {lang}"

@@ -44,6 +44,7 @@ from .extractors import (
 )
 from .extractors.visibility import (
     csharp_visibility,
+    dart_visibility,
     go_visibility,
     java_visibility,
     kotlin_visibility,
@@ -108,7 +109,11 @@ def _build_language_registry() -> dict[str, Language]:
         try:
             mod = __import__(spec.grammar_package)
             loader_fn = getattr(mod, spec.grammar_loader)
-            lang_obj = Language(loader_fn())
+            try:
+                loaded = loader_fn()
+            except TypeError:
+                loaded = loader_fn(spec.tag)
+            lang_obj = loaded if isinstance(loaded, Language) else Language(loaded)
             registry[spec.tag] = lang_obj
         except Exception as exc:
             log.debug(
@@ -438,6 +443,24 @@ LANGUAGE_CONFIGS: dict[str, LanguageConfig] = {
             {"class_declaration", "interface_declaration", "trait_declaration", "enum_declaration"}
         ),
         entry_point_patterns=["index.php", "public/index.php"],
+    ),
+    "dart": LanguageConfig(
+        symbol_node_types={
+            "class_definition": "class",
+            "mixin_declaration": "trait",
+            "enum_declaration": "enum",
+            "extension_declaration": "module",
+            "function_signature": "function",
+            "constructor_signature": "function",
+        },
+        import_node_types=["library_import"],
+        export_node_types=[],
+        visibility_fn=dart_visibility,
+        parent_extraction="nesting",
+        parent_class_types=frozenset(
+            {"class_definition", "mixin_declaration", "extension_declaration"}
+        ),
+        entry_point_patterns=["main.dart"],
     ),
     "luau": LanguageConfig(
         symbol_node_types={

@@ -6,6 +6,7 @@ This plugin wires Codex Wise into Codex through a local MCP server and agent ski
 
 - MCP server configuration for `codex-wise mcp --transport stdio`
 - Skills that prefer Codex Wise context for codebase exploration, risk checks, decisions, and dead-code cleanup
+- Operational skills for `init`, `doctor`, `status`, `update`, `watch`, `hook`, `reindex`, `search`, `export`, `serve`, `mcp`, `workspace`, `costs`, `augment`, `dead-code`, `decision`, and `generate-agents-md`
 - Repo-local marketplace metadata in `.agents/plugins/marketplace.json`
 
 ## Local Development

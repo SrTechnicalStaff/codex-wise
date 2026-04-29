@@ -7,6 +7,7 @@ from collections.abc import Callable
 from .context import ResolverContext
 from .cpp import resolve_cpp_import
 from .csharp import resolve_csharp_import
+from .dart import resolve_dart_import
 from .generic import resolve_generic_import
 from .go import resolve_go_import
 from .kotlin import resolve_kotlin_import
@@ -36,6 +37,7 @@ _RESOLVERS: dict[str, ResolverFn] = {
     "swift": resolve_swift_import,
     "scala": resolve_scala_import,
     "php": resolve_php_import,
+    "dart": resolve_dart_import,
 }
 
 

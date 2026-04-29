@@ -1,14 +1,13 @@
 {
   "name": "codex-wise",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Local codebase intelligence for Codex and MCP-capable coding agents.",
   "author": {
-    "name": "[TODO: Author Name]",
-    "email": "[TODO: author@example.com]",
-    "url": "[TODO: https://github.com/author]"
+    "name": "Codex Wise",
+    "url": "https://github.com/SrTechnicalStaff/codex-wise"
   },
-  "homepage": "[TODO: https://docs.example.com/plugin]",
-  "repository": "[TODO: https://github.com/author/plugin]",
+  "homepage": "https://github.com/SrTechnicalStaff/codex-wise",
+  "repository": "https://github.com/SrTechnicalStaff/codex-wise",
   "license": "AGPL-3.0-only",
   "keywords": [
     "codex",
@@ -24,16 +23,16 @@
     "displayName": "Codex Wise",
     "shortDescription": "Codebase intelligence through local MCP tools.",
     "longDescription": "Codex Wise indexes source, git history, generated docs, architectural decisions, and dead-code findings, then exposes that context to Codex through MCP tools and skills.",
-    "developerName": "[TODO: Developer Name]",
+    "developerName": "Codex Wise",
     "category": "Productivity",
     "capabilities": [
-      "MCP",
+      "Interactive",
       "Read",
-      "Codebase context"
+      "Write"
     ],
-    "websiteURL": "[TODO: https://docs.example.com/plugin]",
-    "privacyPolicyURL": "[TODO: https://example.com/privacy]",
-    "termsOfServiceURL": "[TODO: https://example.com/terms]",
+    "websiteURL": "https://github.com/SrTechnicalStaff/codex-wise",
+    "privacyPolicyURL": "https://github.com/SrTechnicalStaff/codex-wise",
+    "termsOfServiceURL": "https://github.com/SrTechnicalStaff/codex-wise",
     "defaultPrompt": [
       "Use Codex Wise to explain this repository.",
       "Check Codex Wise context before editing shared code.",
