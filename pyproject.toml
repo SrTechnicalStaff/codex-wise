@@ -49,6 +49,7 @@ dependencies = [
     "tree-sitter-scala>=0.23,<1",
     "tree-sitter-php>=0.23,<1",
     "tree-sitter-luau>=1.2,<2",
+    "tree-sitter-language-pack>=0.11,<0.12",
     # Dependency graph
     "networkx>=3.3,<4",
     "scipy>=1.11,<2",
@@ -111,6 +112,7 @@ dev = [
 
 [project.scripts]
 repowise = "repowise.cli.main:cli"
+codex-wise = "repowise.cli.main:cli"
 
 [project.urls]
 Homepage = "https://github.com/repowise-dev/repowise"
@@ -136,8 +138,11 @@ packages = [
     "repowise.core.ingestion",
     "repowise.core.ingestion.dynamic_hints",
     "repowise.core.ingestion.extractors",
+    "repowise.core.ingestion.extractors.bindings",
+    "repowise.core.ingestion.extractors.heritage",
     "repowise.core.ingestion.languages",
     "repowise.core.ingestion.resolvers",
+    "repowise.core.ingestion.resolvers.dotnet",
     "repowise.core.pipeline",
     "repowise.core.persistence",
     "repowise.core.providers",

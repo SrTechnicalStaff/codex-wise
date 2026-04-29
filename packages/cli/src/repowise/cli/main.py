@@ -5,6 +5,7 @@ from __future__ import annotations
 import click
 
 from repowise.cli import __version__
+from repowise.cli.commands.agents_md_cmd import agents_md_command
 from repowise.cli.commands.augment_cmd import augment_command
 from repowise.cli.commands.claude_md_cmd import claude_md_command
 from repowise.cli.commands.costs_cmd import costs_command
@@ -32,6 +33,7 @@ def cli() -> None:
 
 cli.add_command(augment_command)
 cli.add_command(init_command)
+cli.add_command(agents_md_command)
 cli.add_command(claude_md_command)
 cli.add_command(costs_command)
 cli.add_command(update_command)

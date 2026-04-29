@@ -1,0 +1,36 @@
+## Repowise Workspace: {{ data.workspace_name }}
+
+Use `repo="all"` for workspace-wide discovery, or `repo="alias"` to scope a tool call to one repository. Always verify indexed context against source files before editing.
+
+### Repositories
+| Repo | Files | Symbols | Hotspots | Role |
+|------|-------|---------|----------|------|
+{% for r in data.repos %}
+| `{{ r.alias }}` | {{ r.file_count }} | {{ r.symbol_count }} | {{ r.hotspot_count }} | {{ "default" if r.alias == data.default_repo else ("primary" if r.is_primary else "") }} |
+{% endfor %}
+
+{% if data.contract_links %}
+### Cross-Repo API Contracts
+| Provider | Consumer | Type | Contract |
+|----------|----------|------|----------|
+{% for link in data.contract_links %}
+| `{{ link.provider_repo }}:{{ link.provider_file }}` | `{{ link.consumer_repo }}:{{ link.consumer_file }}` | {{ link.contract_type }} | `{{ link.contract_id }}` |
+{% endfor %}
+{% endif %}
+
+{% if data.co_changes %}
+### Cross-Repo Co-Changes
+| Source | Target | Co-changes |
+|--------|--------|------------|
+{% for cc in data.co_changes[:10] %}
+| `{{ cc.source_repo }}:{{ cc.source_file }}` | `{{ cc.target_repo }}:{{ cc.target_file }}` | {{ cc.frequency }} |
+{% endfor %}
+{% endif %}
+
+### MCP Workflow
+
+1. Start with `get_overview(repo="all")` or `get_overview(repo="<alias>")`.
+2. Use `search_codebase(query="...", repo="all")` for discovery.
+3. Use `get_context(targets=[...], repo="<alias>")` before editing unfamiliar files.
+4. Use `get_risk(targets=[...], repo="<alias>")` before changing hotspots.
+5. Treat `get_dead_code()` as optional cleanup guidance, not deletion authority.

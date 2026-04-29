@@ -375,7 +375,7 @@ def interactive_mode_select(console: Console) -> str:
     body.append("  [2]", style=BRAND_STYLE)
     body.append("  Index only  ", style="bold")
     body.append("(no LLM, no cost)\n", style="dim")
-    body.append("       Dependency graph, git history, dead code analysis.\n")
+    body.append("       Dependency graph, git history, decisions, MCP context.\n")
     body.append("       Perfect for MCP-powered AI coding assistants.\n\n")
 
     body.append("  [3]", style=BRAND_STYLE)
@@ -673,9 +673,9 @@ def interactive_advanced_config(
 
     # Embedder selection
     detected_embedder = _resolve_embedder_from_env()
-    embedder_choices = ["gemini", "openai", "mock"]
+    embedder_choices = ["gemini", "openai", "openrouter", "none"]
     result["embedder"] = click.prompt(
-        "  Embedder for RAG",
+        "  Embedder for semantic search",
         default=detected_embedder,
         type=click.Choice(embedder_choices),
     )
@@ -737,7 +737,9 @@ def _resolve_embedder_from_env() -> str:
         return "gemini"
     if os.environ.get("OPENAI_API_KEY"):
         return "openai"
-    return "mock"
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return "openrouter"
+    return "none"
 
 
 # ---------------------------------------------------------------------------
@@ -751,7 +753,6 @@ def print_index_only_intro(console: Console, has_provider: bool = False) -> None
         "  [green]✓[/] Parse all source files (AST)",
         "  [green]✓[/] Build dependency graph (PageRank, communities)",
         "  [green]✓[/] Index git history (hotspots, ownership, co-changes)",
-        "  [green]✓[/] Detect dead code",
         "  [green]✓[/] Extract architectural decisions",
         "  [green]✓[/] Set up MCP server for AI assistants",
     ]

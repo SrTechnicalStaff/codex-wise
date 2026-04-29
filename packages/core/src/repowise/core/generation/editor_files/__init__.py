@@ -6,6 +6,7 @@ Provides generators that create and maintain AI-editor configuration files
 No LLM calls are made — all content is derived from the repowise DB.
 """
 
+from .agents_md import AgentsMdGenerator, WorkspaceAgentsMdGenerator
 from .claude_md import ClaudeMdGenerator, WorkspaceClaudeMdGenerator
 from .data import (
     DecisionSummary,
@@ -20,7 +21,9 @@ from .fetcher import EditorFileDataFetcher
 
 __all__ = [
     # Generators
+    "AgentsMdGenerator",
     "ClaudeMdGenerator",
+    "WorkspaceAgentsMdGenerator",
     "WorkspaceClaudeMdGenerator",
     # Data containers
     "DecisionSummary",

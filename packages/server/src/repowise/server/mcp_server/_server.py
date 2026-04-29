@@ -18,8 +18,7 @@ from repowise.core.persistence.database import (
     resolve_db_url,
 )
 from repowise.core.persistence.search import FullTextSearch
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
+from repowise.core.persistence.vector_store import DisabledVectorStore
 from repowise.server.mcp_server import _state
 
 _log = __import__("logging").getLogger("repowise.mcp")
@@ -40,23 +39,23 @@ def _resolve_embedder():
                 name = (cfg.get("embedder") or "").lower()
         except Exception:
             _log.debug("Failed to read embedder from config.yaml", exc_info=True)
-    if name == "gemini":
-        try:
-            from repowise.core.providers.embedding.gemini import GeminiEmbedder
+    if not name or name == "none":
+        return None
+    if name == "mock" and os.environ.get("REPOWISE_ALLOW_MOCKS") != "1":
+        _log.warning("Mock embedder requested but REPOWISE_ALLOW_MOCKS is not set")
+        return None
+    try:
+        from repowise.core.providers.embedding.registry import get_embedder
 
-            dims = int(os.environ.get("REPOWISE_EMBEDDING_DIMS", "768"))
-            return GeminiEmbedder(output_dimensionality=dims)
-        except Exception:
-            _log.warning("Failed to initialise Gemini embedder — falling back to mock", exc_info=True)
-    if name == "openai":
-        try:
-            from repowise.core.providers.embedding.openai import OpenAIEmbedder
-
-            model = os.environ.get("REPOWISE_EMBEDDING_MODEL", "text-embedding-3-small")
-            return OpenAIEmbedder(model=model)
-        except Exception:
-            _log.warning("Failed to initialise OpenAI embedder — falling back to mock", exc_info=True)
-    return MockEmbedder()
+        kwargs = {}
+        if name == "openai":
+            kwargs["model"] = os.environ.get("REPOWISE_EMBEDDING_MODEL", "text-embedding-3-small")
+        if name == "gemini" and os.environ.get("REPOWISE_EMBEDDING_DIMS"):
+            kwargs["output_dimensionality"] = int(os.environ["REPOWISE_EMBEDDING_DIMS"])
+        return get_embedder(name, **kwargs)
+    except Exception:
+        _log.warning("Embedder '%s' unavailable; semantic search disabled", name, exc_info=True)
+        return None
 
 
 async def _load_vector_stores(repo_path: str | None) -> None:
@@ -81,8 +80,12 @@ async def _load_vector_stores(repo_path: str | None) -> None:
 
     try:
         embedder = _resolve_embedder()
-        vector_store: Any = InMemoryVectorStore(embedder=embedder)
-        decision_store: Any = InMemoryVectorStore(embedder=embedder)
+        vector_store: Any = DisabledVectorStore()
+        decision_store: Any = DisabledVectorStore()
+        if embedder is None:
+            _state._vector_store = vector_store
+            _state._decision_store = decision_store
+            return
 
         try:
             # Step 1 — import lancedb in a thread to keep event loop free.
@@ -107,14 +110,14 @@ async def _load_vector_stores(repo_path: str | None) -> None:
         except ImportError:
             pass
         except Exception:
-            _log.warning("LanceDB pre-connect failed — using InMemory fallback")
+            _log.warning("LanceDB pre-connect failed; semantic search disabled")
 
         _state._vector_store = vector_store
         _state._decision_store = decision_store
     except Exception:
-        _log.exception("Failed to load vector stores — falling back to MockEmbedder")
-        _state._vector_store = InMemoryVectorStore(embedder=MockEmbedder())
-        _state._decision_store = InMemoryVectorStore(embedder=MockEmbedder())
+        _log.exception("Failed to load vector stores; semantic search disabled")
+        _state._vector_store = DisabledVectorStore()
+        _state._decision_store = DisabledVectorStore()
     finally:
         if _state._vector_store_ready is not None:
             _state._vector_store_ready.set()
@@ -276,10 +279,10 @@ async def _lifespan(server: FastMCP):
     _state._fts = FullTextSearch(engine)
     await _state._fts.ensure_index()
 
-    # Seed InMemory placeholders so tools that don't need vector search
+    # Seed disabled placeholders so tools that don't need vector search
     # can start immediately, before the background load completes.
-    _state._vector_store = InMemoryVectorStore(embedder=MockEmbedder())
-    _state._decision_store = InMemoryVectorStore(embedder=MockEmbedder())
+    _state._vector_store = DisabledVectorStore()
+    _state._decision_store = DisabledVectorStore()
 
     # Defer embedder resolution + LanceDB open to a background task so
     # the server starts accepting connections without blocking on disk I/O.

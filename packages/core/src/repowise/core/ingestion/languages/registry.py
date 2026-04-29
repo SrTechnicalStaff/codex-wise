@@ -1048,7 +1048,50 @@ _SPECS: tuple[LanguageSpec, ...] = (
         tag="dart",
         display_name="Dart",
         extensions=frozenset({".dart"}),
-        is_passthrough=True,
+        grammar_package="tree_sitter_language_pack",
+        grammar_loader="get_language",
+        scm_file="dart.scm",
+        heritage_node_types=frozenset(
+            {"class_definition", "mixin_declaration", "extension_declaration"}
+        ),
+        entry_point_patterns=("main.dart",),
+        manifest_files=("pubspec.yaml",),
+        lock_files=("pubspec.lock",),
+        generated_suffixes=(
+            ".g.dart",
+            ".freezed.dart",
+            ".gr.dart",
+            ".mocks.dart",
+            ".config.dart",
+            ".gen.dart",
+        ),
+        blocked_dirs=(".dart_tool", "build"),
+        builtin_calls=frozenset(
+            {
+                "assert",
+                "debugPrint",
+                "identical",
+                "print",
+                "runApp",
+                "setState",
+            }
+        ),
+        builtin_parents=frozenset(
+            {
+                "ChangeNotifier",
+                "ConsumerState",
+                "ConsumerStatefulWidget",
+                "Enum",
+                "Error",
+                "Exception",
+                "HookConsumerWidget",
+                "Object",
+                "State",
+                "StatefulWidget",
+                "StatelessWidget",
+            }
+        ),
+        color_hex="#00B4AB",
     ),
     LanguageSpec(
         tag="zig",

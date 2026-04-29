@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "name": "codex-wise",
+  "title": "Codex Wise",
+  "description": "Repowise MCP context and skills for Codex.",
+  "version": "0.4.0-codex",
+  "publisher": "repowise-dev",
+  "license": "AGPL-3.0-only",
+  "mcpServers": {
+    "repowise": {
+      "command": "repowise",
+      "args": ["mcp", "--transport", "stdio"]
+    }
+  },
+  "skills": [
+    "skills/codebase-exploration",
+    "skills/pre-modification",
+    "skills/dead-code-cleanup"
+  ]
+}

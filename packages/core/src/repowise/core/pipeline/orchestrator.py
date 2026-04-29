@@ -152,6 +152,7 @@ async def run_pipeline(
     resume: bool = False,
     progress: ProgressCallback | None = None,
     cost_tracker: Any | None = None,
+    run_dead_code: bool = False,
 ) -> PipelineResult:
     """Run the repowise indexing/analysis/generation pipeline.
 
@@ -175,15 +176,18 @@ async def run_pipeline(
         A configured ``BaseProvider`` instance for LLM calls. Required when
         *generate_docs* is True, optional otherwise (used for decision extraction).
     embedder:
-        A configured embedder instance for vector embeddings. Falls back to
-        ``MockEmbedder`` when None.
+        A configured embedder instance for vector embeddings. When None,
+        generation proceeds without semantic vectors.
     vector_store:
-        A pre-constructed vector store (e.g. ``LanceDBVectorStore``). Falls
-        back to ``InMemoryVectorStore`` when None and *generate_docs* is True.
+        A pre-constructed vector store (e.g. ``LanceDBVectorStore``). When
+        None, semantic indexing is disabled.
     concurrency:
         Maximum concurrent LLM calls during generation.
     test_run:
         Limit generation to top 10 files by PageRank (for quick validation).
+    run_dead_code:
+        Run graph-based dead-code analysis. Disabled by default because this
+        signal is only trustworthy when the language resolver is mature.
     progress:
         Optional callback for progress reporting. Pass None for silent operation.
 
@@ -291,7 +295,15 @@ async def run_pipeline(
     if progress:
         progress.on_message("info", "Phase 2: Analysis")
 
-    dead_code_report = await _run_dead_code_analysis(graph_builder, git_meta_map, progress=progress)
+    dead_code_report = None
+    if run_dead_code:
+        dead_code_report = await _run_dead_code_analysis(
+            graph_builder,
+            git_meta_map,
+            progress=progress,
+        )
+    elif progress:
+        progress.on_message("info", "Dead-code analysis skipped (opt in with --dead-code)")
 
     decision_report = await _run_decision_extraction(
         repo_path,
@@ -734,9 +746,6 @@ async def run_generation(
         JobSystem,
         PageGenerator,
     )
-    from repowise.core.persistence.vector_store import InMemoryVectorStore
-    from repowise.core.providers.embedding.base import MockEmbedder
-
     # Attach cost tracker to LLM client if available
     if cost_tracker is not None and llm_client is not None and hasattr(llm_client, "_cost_tracker"):
         llm_client._cost_tracker = cost_tracker
@@ -749,12 +758,6 @@ async def run_generation(
     base_config = generation_config if generation_config is not None else GenerationConfig()
     config = replace(base_config, max_concurrency=concurrency)
     assembler = ContextAssembler(config)
-
-    # Resolve embedder and vector store
-    embedder_impl = embedder if embedder is not None else MockEmbedder()
-
-    if vector_store is None:
-        vector_store = InMemoryVectorStore(embedder_impl)
 
     # Job system — use a temp-like dir under repo_path for checkpoints
     jobs_dir = repo_path / ".repowise" / "jobs"

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "repowise": {
+      "command": "repowise",
+      "args": ["mcp", "--transport", "stdio"],
+      "description": "Repowise: codebase context, graph, git signals, decisions, and opt-in dead-code findings"
+    }
+  }
+}

@@ -269,6 +269,8 @@ async def get_why(
     doc_results = []
     try:
         doc_results = await ctx.vector_store.search(query, limit=3)
+        if not doc_results:
+            doc_results = await ctx.fts.search(query, limit=3)
     except Exception:
         with contextlib.suppress(Exception):
             doc_results = await ctx.fts.search(query, limit=3)

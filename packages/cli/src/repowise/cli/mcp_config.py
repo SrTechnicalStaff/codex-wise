@@ -1,4 +1,4 @@
-"""Auto-generated MCP config for Claude Code, Claude Desktop, Cursor, and Cline."""
+"""Auto-generated MCP config for Codex, Claude Code, Claude Desktop, Cursor, and Cline."""
 
 from __future__ import annotations
 
@@ -232,6 +232,8 @@ def format_setup_instructions(repo_path: Path) -> str:
 MCP Server Configuration
 ========================
 
+Codex: configured via .codex/config.toml.
+
 Claude Code: automatically configured via .mcp.json (no manual steps needed).
 
 Cursor (.cursor/mcp.json):
@@ -247,4 +249,5 @@ Or run directly:
   repowise mcp {abs_path} --transport sse --port 7338
 
 Config saved to: {repo_path / ".repowise" / "mcp.json"}
+Codex config: {repo_path / ".codex" / "config.toml"}
 """.strip()

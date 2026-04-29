@@ -6,15 +6,15 @@ Backends
 --------
 SQLite (default)
     Uses ``aiosqlite`` for async I/O and SQLite FTS5 for full-text search.
-    Vector embeddings are stored in :class:`InMemoryVectorStore` by default
-    or :class:`LanceDBVectorStore` when the ``search`` extra is installed.
+    Vector embeddings are stored in :class:`LanceDBVectorStore` when a real
+    embedder is configured. Otherwise semantic search is disabled explicitly.
 
 PostgreSQL
     Uses ``asyncpg`` and the ``pgvector`` extension.  Install the
     ``pgvector`` extra: ``pip install repowise-core[pgvector]``.
 """
 
-from repowise.core.providers.embedding.base import Embedder, MockEmbedder
+from repowise.core.providers.embedding.base import Embedder
 
 from .crud import (
     batch_upsert_graph_edges,
@@ -101,6 +101,7 @@ from .models import (
 )
 from .search import FullTextSearch, SearchResult
 from .vector_store import (
+    DisabledVectorStore,
     InMemoryVectorStore,
     LanceDBVectorStore,
     PgVectorStore,
@@ -126,9 +127,9 @@ __all__ = [
     "GraphEdge",
     "GraphNode",
     # vector store
+    "DisabledVectorStore",
     "InMemoryVectorStore",
     "LanceDBVectorStore",
-    "MockEmbedder",
     "Page",
     "PageVersion",
     "PgVectorStore",

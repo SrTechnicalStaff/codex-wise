@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 __all__ = [
+    "DisabledVectorStore",
     "InMemoryVectorStore",
     "LanceDBVectorStore",
     "PgVectorStore",
@@ -83,6 +84,26 @@ class VectorStore(ABC):
         that imports A, we fetch A's previously-generated summary and feed it to the LLM.
         """
         return None  # default: no-op (subclasses should override)
+
+
+class DisabledVectorStore(VectorStore):
+    """Explicit lexical-only vector store.
+
+    This is used when no real embedder is configured. It returns no semantic
+    results so callers can deliberately fall back to FTS without fake vectors.
+    """
+
+    async def embed_and_upsert(self, page_id: str, text: str, metadata: dict) -> None:
+        return None
+
+    async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+        return []
+
+    async def delete(self, page_id: str) -> None:
+        return None
+
+    async def close(self) -> None:
+        return None
 
 
 # ---------------------------------------------------------------------------

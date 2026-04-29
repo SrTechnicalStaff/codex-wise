@@ -44,7 +44,7 @@ def _setup_embedder() -> None:
     has_openrouter = bool(os.environ.get("OPENROUTER_API_KEY"))
 
     console.print(
-        "\n[bold]Chat & search require an embedder.[/bold] "
+        "\n[bold]Chat & semantic search require an embedder.[/bold] "
         "Choose one or skip (other features still work).\n"
     )
 
@@ -69,13 +69,13 @@ def _setup_embedder() -> None:
         options.append("openrouter")
         labels.append("[3] openrouter  [dim]needs OPENROUTER_API_KEY[/dim]")
     options.append("skip")
-    labels.append(f"[{len(options)}] skip        [dim]no chat/search[/dim]")
+    labels.append(f"[{len(options)}] skip        [dim]full-text search only[/dim]")
 
     for label in labels:
         console.print(f"  {label}")
     console.print()
 
-    default = "1" if (has_gemini or has_openai) else "3"
+    default = "1" if has_gemini else "2" if has_openai else "3" if has_openrouter else "4"
     raw = click.prompt("  Select", default=default).strip()
 
     # Map number or name to option.
@@ -86,7 +86,7 @@ def _setup_embedder() -> None:
     )
 
     if choice == "skip":
-        console.print("[dim]Skipping embedder — chat and search will be unavailable.[/dim]\n")
+        console.print("[dim]Skipping embedder - semantic search disabled.[/dim]\n")
         return
 
     os.environ["REPOWISE_EMBEDDER"] = choice

@@ -160,8 +160,7 @@ class RepoRegistry:
             init_db,
         )
         from repowise.core.persistence.search import FullTextSearch
-        from repowise.core.persistence.vector_store import InMemoryVectorStore
-        from repowise.core.providers.embedding.base import MockEmbedder
+        from repowise.core.persistence.vector_store import DisabledVectorStore
         from sqlalchemy.ext.asyncio import (
             AsyncSession as _AsyncSession,
             async_sessionmaker as _async_sessionmaker,
@@ -183,10 +182,11 @@ class RepoRegistry:
         fts = FullTextSearch(engine)
         await fts.ensure_index()
 
-        # Seed placeholder vector stores
-        embedder = self._embedder_factory() if self._embedder_factory else MockEmbedder()
-        vector_store: Any = InMemoryVectorStore(embedder=embedder)
-        decision_store: Any = InMemoryVectorStore(embedder=embedder)
+        # Seed disabled vector stores; semantic search is enabled only when a
+        # real persisted LanceDB store and embedder are available.
+        embedder = self._embedder_factory() if self._embedder_factory else None
+        vector_store: Any = DisabledVectorStore()
+        decision_store: Any = DisabledVectorStore()
 
         vs_ready = asyncio.Event()
 
@@ -218,6 +218,8 @@ class RepoRegistry:
     ) -> None:
         """Background task: load LanceDB vector stores for a repo."""
         try:
+            if embedder is None:
+                return
             try:
                 await asyncio.to_thread(__import__, "lancedb")
                 from repowise.core.persistence.vector_store import LanceDBVectorStore
@@ -235,10 +237,7 @@ class RepoRegistry:
             except ImportError:
                 pass
             except Exception:
-                _log.warning(
-                    "LanceDB load failed for '%s' — using InMemory fallback",
-                    ctx.alias,
-                )
+                _log.warning("LanceDB load failed for '%s'; semantic search disabled", ctx.alias)
         finally:
             # Only signal ready if this context is still the active one.
             # If it was evicted before we finished loading, a fresh context

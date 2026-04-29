@@ -118,7 +118,40 @@ def _resolve_embedder(embedder_flag: str | None) -> str:
         return "openai"
     if os.environ.get("OPENROUTER_API_KEY"):
         return "openrouter"
-    return "mock"
+    return "none"
+
+
+def _build_embedder(embedder_name_resolved: str) -> Any | None:
+    """Build a real embedder, or return None when semantic search is disabled."""
+    if embedder_name_resolved == "none":
+        return None
+
+    if embedder_name_resolved == "mock" and os.environ.get("REPOWISE_ALLOW_MOCKS") != "1":
+        raise click.ClickException(
+            "Mock embeddings are disabled outside explicit test mode. "
+            "Set REPOWISE_ALLOW_MOCKS=1 to opt in, or use --embedder none."
+        )
+
+    try:
+        from repowise.core.providers.embedding.registry import get_embedder
+
+        return get_embedder(embedder_name_resolved)
+    except Exception as exc:
+        raise click.ClickException(
+            f"Embedder {embedder_name_resolved!r} could not be initialized: {exc}. "
+            "Use --embedder none for lexical-only search."
+        ) from exc
+
+
+def _build_vector_store(repo_path: Path, embedder: Any | None) -> Any | None:
+    """Build a persistent vector store when a real embedder is configured."""
+    if embedder is None:
+        return None
+    from repowise.core.persistence.vector_store import LanceDBVectorStore
+
+    lance_dir = repo_path / ".repowise" / "lancedb"
+    lance_dir.mkdir(parents=True, exist_ok=True)
+    return LanceDBVectorStore(str(lance_dir), embedder=embedder)
 
 
 def _register_mcp_with_claude(console_obj: Any, repo_path: Path) -> None:
@@ -205,6 +238,68 @@ async def _write_claude_md_async(repo_path: Path) -> None:
     finally:
         await engine.dispose()
     ClaudeMdGenerator().write(repo_path, data)
+
+
+def _maybe_generate_agents_md(
+    console_obj: Any,
+    repo_path: Path,
+    *,
+    no_agents_md: bool = False,
+) -> None:
+    """Generate AGENTS.md for Codex if enabled in config and not opted out."""
+    cfg = load_config(repo_path)
+    enabled = cfg.get("editor_files", {}).get("agents_md", True)
+    if no_agents_md:
+        ef_cfg = dict(cfg.get("editor_files", {}))
+        ef_cfg["agents_md"] = False
+        cfg["editor_files"] = ef_cfg
+        try:
+            import yaml  # type: ignore[import-untyped]
+
+            cfg_path = repo_path / ".repowise" / "config.yaml"
+            cfg_path.write_text(
+                yaml.dump(cfg, default_flow_style=False, sort_keys=False),
+                encoding="utf-8",
+            )
+        except ImportError:
+            pass
+        return
+    if not enabled:
+        return
+    try:
+        with console_obj.status("  Generating AGENTS.md...", spinner="dots"):
+            run_async(_write_agents_md_async(repo_path))
+        console_obj.print("  [green]✓[/green] AGENTS.md updated")
+    except Exception as exc:
+        console_obj.print(f"  [yellow]AGENTS.md skipped: {exc}[/yellow]")
+
+
+async def _write_agents_md_async(repo_path: Path) -> None:
+    """Fetch data from DB and write AGENTS.md."""
+    from repowise.cli.helpers import get_db_url_for_repo
+    from repowise.core.generation.editor_files import AgentsMdGenerator, EditorFileDataFetcher
+    from repowise.core.persistence import (
+        create_engine,
+        create_session_factory,
+        get_session,
+        init_db,
+    )
+    from repowise.core.persistence.crud import get_repository_by_path
+
+    url = get_db_url_for_repo(repo_path)
+    engine = create_engine(url)
+    await init_db(engine)
+    sf = create_session_factory(engine)
+    try:
+        async with get_session(sf) as session:
+            repo = await get_repository_by_path(session, str(repo_path))
+            if repo is None:
+                return
+            fetcher = EditorFileDataFetcher(session, repo.id, repo_path)
+            data = await fetcher.fetch()
+    finally:
+        await engine.dispose()
+    AgentsMdGenerator().write(repo_path, data)
 
 
 # ---------------------------------------------------------------------------
@@ -303,8 +398,6 @@ def _run_workspace_generation(
     from repowise.cli.ui import BRAND, RichProgressCallback
     from repowise.core.generation import GenerationConfig
     from repowise.core.generation.cost_tracker import CostTracker
-    from repowise.core.persistence.vector_store import InMemoryVectorStore
-    from repowise.core.providers.embedding.base import MockEmbedder
     from repowise.core.pipeline import run_generation
     from repowise.cli.helpers import get_db_url_for_repo
     from repowise.core.persistence import (
@@ -315,34 +408,8 @@ def _run_workspace_generation(
         upsert_repository as _ur,
     )
 
-    # Build embedder
-    embedder_impl: Any
-    if embedder_name_resolved == "gemini":
-        try:
-            from repowise.core.providers.embedding.gemini import GeminiEmbedder
-
-            embedder_impl = GeminiEmbedder()
-        except Exception:
-            embedder_impl = MockEmbedder()
-    elif embedder_name_resolved == "openai":
-        try:
-            from repowise.core.providers.embedding.openai import OpenAIEmbedder
-
-            embedder_impl = OpenAIEmbedder()
-        except Exception:
-            embedder_impl = MockEmbedder()
-    else:
-        embedder_impl = MockEmbedder()
-
-    # Build vector store
-    lance_dir = repo_path / ".repowise" / "lancedb"
-    try:
-        from repowise.core.persistence.vector_store import LanceDBVectorStore
-
-        lance_dir.mkdir(parents=True, exist_ok=True)
-        vector_store: Any = LanceDBVectorStore(str(lance_dir), embedder=embedder_impl)
-    except ImportError:
-        vector_store = InMemoryVectorStore(embedder_impl)
+    embedder_impl = _build_embedder(embedder_name_resolved)
+    vector_store = _build_vector_store(repo_path, embedder_impl)
 
     # Cost estimate
     gen_config = GenerationConfig(max_concurrency=concurrency)
@@ -551,9 +618,9 @@ def _workspace_init(
             )
             console.print(f"  Embedder: [cyan]{embedder_name_resolved}[/cyan]\n")
         except Exception as exc:
-            console.print(f"  [yellow]Provider setup failed ({exc}); falling back to index-only.[/yellow]")
-            index_only = True
-            provider = None
+            raise click.ClickException(
+                f"Provider setup failed: {exc}. Re-run with --index-only for indexing only."
+            ) from exc
 
     # Step 3: Create workspace config
     entries = [
@@ -771,15 +838,15 @@ def _workspace_init(
     "--provider",
     "provider_name",
     default=None,
-    help="LLM provider name (anthropic, openai, gemini, ollama, mock).",
+    help="LLM provider name (anthropic, openai, gemini, ollama, openrouter).",
 )
 @click.option("--model", default=None, help="Model identifier override.")
 @click.option(
     "--embedder",
     "embedder_name",
     default=None,
-    type=click.Choice(["gemini", "openai", "mock"]),
-    help="Embedder for RAG: gemini | openai | mock (default: auto-detect).",
+    type=click.Choice(["gemini", "openai", "openrouter", "none"]),
+    help="Embedder for semantic search. Defaults to auto-detect; none disables vectors.",
 )
 @click.option("--skip-tests", is_flag=True, default=False, help="Skip test files.")
 @click.option("--skip-infra", is_flag=True, default=False, help="Skip infrastructure files.")
@@ -802,7 +869,14 @@ def _workspace_init(
     "--index-only",
     is_flag=True,
     default=False,
-    help="Index files, git history, graph, and dead code — skip LLM page generation.",
+    help="Index files, git history, and graph; skip LLM page generation.",
+)
+@click.option(
+    "--dead-code",
+    "run_dead_code",
+    is_flag=True,
+    default=False,
+    help="Run dead-code analysis and persist cleanup candidates. Opt-in because graph quality matters.",
 )
 @click.option(
     "--exclude",
@@ -831,6 +905,13 @@ def _workspace_init(
     help="Skip generating CLAUDE.md. Saves 'editor_files.claude_md: false' to config.",
 )
 @click.option(
+    "--no-agents-md",
+    "no_agents_md",
+    is_flag=True,
+    default=False,
+    help="Skip generating AGENTS.md. Saves 'editor_files.agents_md: false' to config.",
+)
+@click.option(
     "--include-submodules",
     is_flag=True,
     default=False,
@@ -857,17 +938,19 @@ def init_command(
     concurrency: int,
     test_run: bool,
     index_only: bool,
+    run_dead_code: bool,
     exclude: tuple[str, ...],
     commit_limit: int | None,
     follow_renames: bool,
     no_claude_md: bool,
+    no_agents_md: bool,
     include_submodules: bool,
     init_all: bool,
 ) -> None:
     """Generate wiki documentation for a codebase.
 
     PATH defaults to the current directory.
-    Use --index-only to run ingestion (AST, graph, git, dead code) without LLM generation.
+    Use --index-only to run ingestion (AST, graph, git) without LLM generation.
     """
     from repowise.cli.ui import (
         BRAND,
@@ -1023,8 +1106,12 @@ def init_command(
                 )
             ):
                 decision_provider = resolve_provider(provider_name, model, repo_path)
-        except Exception:
-            pass
+        except Exception as exc:
+            if provider_name:
+                raise click.ClickException(
+                    f"Decision provider setup failed: {exc}. "
+                    "Omit --provider for plain index-only mode."
+                ) from exc
 
         has_provider = decision_provider is not None
         if is_interactive:
@@ -1094,6 +1181,7 @@ def init_command(
                 llm_client=llm_client,
                 concurrency=concurrency,
                 test_run=test_run,
+                run_dead_code=run_dead_code,
                 progress=callback,
             )
         )
@@ -1149,6 +1237,8 @@ def init_command(
             lang_summary=_lang_summary,
         )
     )
+    if result.dead_code_report is None:
+        console.print("  [yellow]Dead-code analysis skipped; run with --dead-code to opt in.[/yellow]")
 
     # ---- Phase 3: Generation (full mode only) ----
     if not index_only:
@@ -1203,36 +1293,12 @@ def init_command(
             console.print("[yellow]Aborted.[/yellow]")
             return
 
-        # Build embedder + vector store
-        from repowise.core.persistence.vector_store import InMemoryVectorStore
-        from repowise.core.providers.embedding.base import MockEmbedder
-
-        embedder_impl: Any
-        if embedder_name_resolved == "gemini":
-            try:
-                from repowise.core.providers.embedding.gemini import GeminiEmbedder
-
-                embedder_impl = GeminiEmbedder()
-            except Exception:
-                embedder_impl = MockEmbedder()
-        elif embedder_name_resolved == "openai":
-            try:
-                from repowise.core.providers.embedding.openai import OpenAIEmbedder
-
-                embedder_impl = OpenAIEmbedder()
-            except Exception:
-                embedder_impl = MockEmbedder()
-        else:
-            embedder_impl = MockEmbedder()
-
-        lance_dir = repo_path / ".repowise" / "lancedb"
-        try:
-            from repowise.core.persistence.vector_store import LanceDBVectorStore
-
-            lance_dir.mkdir(parents=True, exist_ok=True)
-            vector_store: Any = LanceDBVectorStore(str(lance_dir), embedder=embedder_impl)
-        except ImportError:
-            vector_store = InMemoryVectorStore(embedder_impl)
+        embedder_impl = _build_embedder(embedder_name_resolved)
+        vector_store = _build_vector_store(repo_path, embedder_impl)
+        if vector_store is None:
+            console.print(
+                "  [yellow]Semantic vector index disabled; MCP search will use full text.[/yellow]"
+            )
 
         # Run generation via the pipeline's generation function
         from repowise.core.pipeline import run_generation
@@ -1337,12 +1403,16 @@ def init_command(
         except ImportError:
             pass
 
+    from repowise.cli.codex_config import save_project_codex_config
     from repowise.cli.mcp_config import save_mcp_config, save_root_mcp_config
 
     save_mcp_config(repo_path)
     save_root_mcp_config(repo_path)
+    codex_config_path = save_project_codex_config(repo_path)
+    console.print(f"  [green]✓[/green] Codex MCP config updated ({codex_config_path})")
     _register_mcp_with_claude(console, repo_path)
 
+    _maybe_generate_agents_md(console, repo_path, no_agents_md=no_agents_md)
     _maybe_generate_claude_md(console, repo_path, no_claude_md=no_claude_md)
 
     # ---- State + config (full mode only) ----
@@ -1451,7 +1521,10 @@ def init_command(
                 "Graph",
                 f"{_graph_final.number_of_nodes()} nodes · {_graph_final.number_of_edges()} edges",
             ),
-            ("Dead code", f"{_dc_unreachable} unreachable · {_dc_unused} unused exports"),
+            (
+                "Dead code",
+                "skipped" if result.dead_code_report is None else f"{_dc_unreachable} unreachable · {_dc_unused} unused exports",
+            ),
             ("Decisions", str(_n_decisions)),
         ]
         if result.git_summary:
@@ -1483,7 +1556,10 @@ def init_command(
             ("Provider", f"{provider.provider_name} / {provider.model_name}"),
             ("Elapsed", format_elapsed(elapsed)),
             ("", ""),
-            ("Dead code", f"{_dc_unreachable} unreachable · {_dc_unused} unused exports"),
+            (
+                "Dead code",
+                "skipped" if result.dead_code_report is None else f"{_dc_unreachable} unreachable · {_dc_unused} unused exports",
+            ),
             ("Decisions", str(_n_decisions)),
         ]
         if result.git_summary:

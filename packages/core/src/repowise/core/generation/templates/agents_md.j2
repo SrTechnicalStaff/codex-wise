@@ -1,0 +1,73 @@
+## Repowise Context for {{ data.repo_name }}
+
+This repository is indexed by Repowise. Use the MCP tools for orientation and discovery, then verify against source files before editing. The index may be stale.
+
+Last indexed: {{ data.indexed_at }}{% if data.indexed_commit %} (commit {{ data.indexed_commit }}){% endif %}{% if data.avg_confidence %}. Confidence: {{ (data.avg_confidence * 100) | int }}%.{% endif %}
+
+{% if data.architecture_summary %}
+### Architecture
+{{ data.architecture_summary }}
+{% endif %}
+{% if data.key_modules %}
+### Key Modules
+| Module | Purpose | Owner |
+|--------|---------|-------|
+{% for mod in data.key_modules %}
+| `{{ mod.name }}` | {{ mod.purpose or "n/a" }} | {{ mod.owner or "n/a" }} |
+{% endfor %}
+{% endif %}
+{% if data.entry_points %}
+### Entry Points
+{% for ep in data.entry_points %}
+- `{{ ep }}`
+{% endfor %}
+{% endif %}
+{% if data.tech_stack %}
+### Tech Stack
+{% set langs = data.tech_stack | selectattr("category", "eq", "language") | list %}
+{% set frameworks = data.tech_stack | selectattr("category", "eq", "framework") | list %}
+{% set infra = data.tech_stack | selectattr("category", "eq", "infra") | list %}
+{% set dbs = data.tech_stack | selectattr("category", "eq", "database") | list %}
+{% if langs %}Languages: {{ langs | map(attribute="name") | join(", ") }}{% endif %}
+
+{% if frameworks %}Frameworks: {{ frameworks | map(attribute="name") | join(", ") }}{% endif %}
+
+{% if dbs %}Databases: {{ dbs | map(attribute="name") | join(", ") }}{% endif %}
+
+{% if infra %}Infra: {{ infra | map(attribute="name") | join(", ") }}{% endif %}
+{% endif %}
+{% if data.hotspots %}
+### Hotspots
+| File | Churn | 90d Commits | Owner |
+|------|-------|-------------|-------|
+{% for h in data.hotspots %}
+| `{{ h.path }}` | {{ h.churn_percentile }}th percentile | {{ h.commit_count_90d }} | {{ h.owner or "n/a" }} |
+{% endfor %}
+{% endif %}
+
+### MCP Workflow
+
+Repowise is a context provider. The host agent remains responsible for reasoning and code edits.
+
+1. Start with `get_overview()` on a new task.
+2. Use `get_context(targets=["path/to/file.dart"])` for indexed context, then read the source.
+3. Use `search_codebase(query="...")` to discover likely files.
+4. Use `get_why(query="...")` before architectural changes.
+5. Use `get_risk(targets=["path/to/file.dart"])` before changing hotspot or shared files.
+6. Treat `get_dead_code()` as cleanup guidance only. Confirm with source and runtime knowledge before deleting code.
+
+| Tool | Use |
+|------|-----|
+| `get_overview()` | Repository orientation |
+| `get_context(targets=[...])` | File/module/symbol context |
+| `search_codebase(query="...")` | Discovery by meaning or keyword |
+| `get_why(query="...")` | Architectural rationale |
+| `get_risk(targets=[...])` | Risk and ownership signals |
+| `get_dead_code()` | Optional cleanup candidates |
+{% if data.build_commands %}
+
+### Commands
+{% for label, cmd in data.build_commands.items() %}
+- {{ label | capitalize }}: `{{ cmd }}`
+{% endfor %}
+{% endif %}

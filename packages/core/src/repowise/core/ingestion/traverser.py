@@ -84,6 +84,7 @@ _BLOCKED_DIRS: frozenset[str] = frozenset(
         ".next",
         "target",  # Rust / Maven
         ".gradle",
+        ".dart_tool",
         "vendor",  # Go / PHP
         "coverage",
         "htmlcov",
@@ -145,7 +146,7 @@ _GENERATED_SUFFIXES: tuple[str, ...] = tuple(_LANG_REGISTRY.generated_suffixes()
 
 # Manifest files that indicate a package root (for monorepo detection)
 _MANIFEST_FILES: frozenset[str] = frozenset(
-    {"pyproject.toml", "package.json", "Cargo.toml", "go.mod"}
+    {"pyproject.toml", "package.json", "Cargo.toml", "go.mod", "pubspec.yaml"}
 )
 
 # Entry-point filename stems

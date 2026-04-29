@@ -34,6 +34,7 @@ LanguageTag = Literal[
     "kotlin",
     "scala",
     "luau",
+    "dart",
     "shell",
     "yaml",
     "json",

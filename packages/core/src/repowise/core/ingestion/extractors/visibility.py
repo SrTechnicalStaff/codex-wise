@@ -98,6 +98,11 @@ def php_visibility(_name: str, modifier_texts: list[str]) -> str:
     return "public"
 
 
+def dart_visibility(name: str, _modifier_texts: list[str]) -> str:
+    """Dart visibility is library-scoped; leading underscores are private."""
+    return "private" if name.startswith("_") else "public"
+
+
 VISIBILITY_FNS: dict[str, Callable[[str, list[str]], str]] = {
     "python": py_visibility,
     "typescript": ts_visibility,
@@ -113,4 +118,5 @@ VISIBILITY_FNS: dict[str, Callable[[str, list[str]], str]] = {
     "swift": swift_visibility,
     "scala": scala_visibility,
     "php": php_visibility,
+    "dart": dart_visibility,
 }

@@ -24,8 +24,7 @@ from repowise.core.persistence.database import (
     resolve_db_url,
 )
 from repowise.core.persistence.search import FullTextSearch
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
+from repowise.core.persistence.vector_store import DisabledVectorStore
 from repowise.server import __version__
 from repowise.server.routers import (
     blast_radius,
@@ -54,32 +53,29 @@ logger = logging.getLogger(__name__)
 
 
 def _build_embedder():
-    """Build an embedder from REPOWISE_EMBEDDER env var (default: mock).
+    """Build an embedder from REPOWISE_EMBEDDER, or None for lexical-only mode."""
+    name = os.environ.get("REPOWISE_EMBEDDER", "none").lower()
+    if not name or name == "none":
+        return None
+    if name == "mock" and os.environ.get("REPOWISE_ALLOW_MOCKS") != "1":
+        logger.warning("embedder.mock_blocked")
+        return None
+    try:
+        from repowise.core.providers.embedding.registry import get_embedder
 
-    Supported values:
-        mock       — deterministic 8-dim SHA-256 embedder (default, no API key needed)
-        gemini     — GeminiEmbedder via GEMINI_API_KEY / GOOGLE_API_KEY env var
-        openai     — OpenAIEmbedder via OPENAI_API_KEY env var
-        openrouter — OpenRouterEmbedder via OPENROUTER_API_KEY env var
-    """
-    name = os.environ.get("REPOWISE_EMBEDDER", "mock").lower()
-    if name == "gemini":
-        from repowise.core.providers.embedding.gemini import GeminiEmbedder
-
-        dims = int(os.environ.get("REPOWISE_EMBEDDING_DIMS", "768"))
-        return GeminiEmbedder(output_dimensionality=dims)
-    if name == "openai":
-        from repowise.core.providers.embedding.openai import OpenAIEmbedder
-
-        model = os.environ.get("REPOWISE_EMBEDDING_MODEL", "text-embedding-3-small")
-        return OpenAIEmbedder(model=model)
-    if name == "openrouter":
-        from repowise.core.providers.embedding.openrouter import OpenRouterEmbedder
-
-        model = os.environ.get("REPOWISE_EMBEDDING_MODEL", "google/gemini-embedding-001")
-        return OpenRouterEmbedder(model=model)
-    logger.warning("embedder.mock_active — set REPOWISE_EMBEDDER=gemini, openai, or openrouter for real RAG")
-    return MockEmbedder()
+        kwargs = {}
+        if name == "openai":
+            kwargs["model"] = os.environ.get("REPOWISE_EMBEDDING_MODEL", "text-embedding-3-small")
+        if name == "openrouter":
+            kwargs["model"] = os.environ.get(
+                "REPOWISE_EMBEDDING_MODEL", "google/gemini-embedding-001"
+            )
+        if name == "gemini" and os.environ.get("REPOWISE_EMBEDDING_DIMS"):
+            kwargs["output_dimensionality"] = int(os.environ["REPOWISE_EMBEDDING_DIMS"])
+        return get_embedder(name, **kwargs)
+    except Exception as exc:
+        logger.warning("embedder.unavailable", extra={"name": name, "error": str(exc)})
+        return None
 
 
 @asynccontextmanager
@@ -141,9 +137,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     fts = FullTextSearch(engine)
     await fts.ensure_index()
 
-    # Vector store (InMemory default; LanceDB/pgvector configured via env)
+    # Vector store: disabled unless a real embedder is configured.
     embedder = _build_embedder()
-    vector_store = InMemoryVectorStore(embedder=embedder)
+    vector_store = DisabledVectorStore()
+    if embedder is not None:
+        try:
+            from repowise.core.persistence.vector_store import LanceDBVectorStore
+
+            lance_dir = os.environ.get("REPOWISE_LANCEDB_PATH")
+            if lance_dir:
+                vector_store = LanceDBVectorStore(lance_dir, embedder=embedder)
+        except Exception as exc:
+            logger.warning("vector_store.disabled", extra={"error": str(exc)})
 
     # Store on app state (before scheduler, so scheduler can reference app_state)
     app.state.engine = engine

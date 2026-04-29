@@ -240,6 +240,12 @@ def resolve_provider(
         if model is None and cfg.get("model"):
             model = cfg["model"]
 
+    if provider_name == "mock" and os.environ.get("REPOWISE_ALLOW_MOCKS") != "1":
+        raise click.ClickException(
+            "Mock LLM providers are disabled outside explicit test mode. "
+            "Set REPOWISE_ALLOW_MOCKS=1 to opt in."
+        )
+
     def _resolve_base_url(name: str) -> str | None:
         """Return base_url from env or repo config for the provider."""
         env_vars = {

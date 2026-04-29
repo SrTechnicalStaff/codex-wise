@@ -61,26 +61,17 @@ def _search_semantic(repo_path, query: str, limit: int) -> None:
     async def _run():
         from pathlib import Path
 
-        from repowise.core.persistence import MockEmbedder
-
         # Try LanceDB first (populated during repowise init)
         lance_dir = Path(repo_path) / ".repowise" / "lancedb"
         if lance_dir.exists():
             try:
-                from repowise.cli.commands.init_cmd import _resolve_embedder
+                from repowise.cli.commands.init_cmd import _build_embedder, _resolve_embedder
                 from repowise.core.persistence.vector_store import LanceDBVectorStore
 
                 embedder_name = _resolve_embedder(None)
-                if embedder_name == "gemini":
-                    from repowise.core.providers.embedding.gemini import GeminiEmbedder
-
-                    embedder = GeminiEmbedder()
-                elif embedder_name == "openai":
-                    from repowise.core.providers.embedding.openai import OpenAIEmbedder
-
-                    embedder = OpenAIEmbedder()
-                else:
-                    embedder = MockEmbedder()
+                embedder = _build_embedder(embedder_name)
+                if embedder is None:
+                    raise RuntimeError("No embedder configured")
                 store = LanceDBVectorStore(str(lance_dir), embedder=embedder)
                 results = await store.search(query, limit=limit)
                 await store.close()
@@ -88,7 +79,7 @@ def _search_semantic(repo_path, query: str, limit: int) -> None:
             except Exception:
                 pass
 
-        # Fallback to FTS
+        console.print("[yellow]Semantic index unavailable; using full-text search.[/yellow]")
         from repowise.core.persistence import FullTextSearch, create_engine
 
         url = get_db_url_for_repo(repo_path)
