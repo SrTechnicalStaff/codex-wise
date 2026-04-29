@@ -69,3 +69,11 @@ def test_estimate_cost_zero_for_mock():
     plans = [PageTypePlan("module_page", 5, 4)]
     est = estimate_cost(plans, "mock", "mock")
     assert est.estimated_cost_usd == 0.0
+
+
+def test_estimate_cost_zero_for_codex_subscription_usage():
+    plans = [PageTypePlan("repo_overview", 1, 6)]
+    est = estimate_cost(plans, "codex", "gpt-5.5")
+    assert est.estimated_cost_usd == 0.0
+    assert est.estimated_input_tokens > 0
+    assert est.estimated_output_tokens > 0

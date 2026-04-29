@@ -99,6 +99,22 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / denom if denom > 0 else 0.0
 
 
+async def _embed_document(embedder: Embedder, text: str, metadata: dict) -> list[float]:
+    """Embed stored content, using provider-specific document formatting when available."""
+    method = getattr(embedder, "embed_document", None)
+    if callable(method):
+        return await method(text, title=metadata.get("title"))
+    return (await embedder.embed([text]))[0]
+
+
+async def _embed_query(embedder: Embedder, query: str) -> list[float]:
+    """Embed a search query, using provider-specific query formatting when available."""
+    method = getattr(embedder, "embed_query", None)
+    if callable(method):
+        return await method(query)
+    return (await embedder.embed([query]))[0]
+
+
 class InMemoryVectorStore(VectorStore):
     """Cosine-similarity vector store backed by a plain Python dict.
 
@@ -112,14 +128,13 @@ class InMemoryVectorStore(VectorStore):
         self._store: dict[str, tuple[list[float], dict]] = {}
 
     async def embed_and_upsert(self, page_id: str, text: str, metadata: dict) -> None:
-        vectors = await self._embedder.embed([text])
-        self._store[page_id] = (vectors[0], dict(metadata))
+        vector = await _embed_document(self._embedder, text, metadata)
+        self._store[page_id] = (vector, dict(metadata))
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
         if not self._store:
             return []
-        q_vecs = await self._embedder.embed([query])
-        q_vec = q_vecs[0]
+        q_vec = await _embed_query(self._embedder, query)
 
         scored: list[tuple[float, str, dict]] = []
         for pid, (vec, meta) in self._store.items():
@@ -246,8 +261,7 @@ class LanceDBVectorStore(VectorStore):
 
     async def embed_and_upsert(self, page_id: str, text: str, metadata: dict) -> None:
         await self._ensure_connected()
-        vectors = await self._embedder.embed([text])
-        vector = vectors[0]
+        vector = await _embed_document(self._embedder, text, metadata)
         await self._ensure_table(vector)
 
         content = str(metadata.get("content", text))
@@ -279,8 +293,7 @@ class LanceDBVectorStore(VectorStore):
         if self._table is None:
             return []
 
-        q_vecs = await self._embedder.embed([query])
-        q_vec = [float(v) for v in q_vecs[0]]
+        q_vec = [float(v) for v in await _embed_query(self._embedder, query)]
 
         raw = (
             await self._table.query()  # type: ignore[union-attr]
@@ -378,8 +391,7 @@ class PgVectorStore(VectorStore):
         self._embedder = embedder
 
     async def embed_and_upsert(self, page_id: str, text: str, metadata: dict) -> None:
-        vectors = await self._embedder.embed([text])
-        vector = vectors[0]
+        vector = await _embed_document(self._embedder, text, metadata)
         # pgvector expects a list encoded as a string like "[0.1, 0.2, ...]"
         vec_str = "[" + ",".join(str(v) for v in vector) + "]"
 
@@ -393,8 +405,7 @@ class PgVectorStore(VectorStore):
             await session.commit()
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
-        q_vecs = await self._embedder.embed([query])
-        q_vec = q_vecs[0]
+        q_vec = await _embed_query(self._embedder, query)
         vec_str = "[" + ",".join(str(v) for v in q_vec) + "]"
 
         from sqlalchemy.sql import text as sa_text

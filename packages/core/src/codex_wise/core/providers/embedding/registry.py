@@ -5,7 +5,7 @@ and runtime registration for community embedders.
 
 Built-in embedders:
     openai  → OpenAIEmbedder  (text-embedding-3-small default)
-    gemini  → GeminiEmbedder  (gemini-embedding-001 default)
+    gemini  → GeminiEmbedder  (gemini-embedding-2 default)
     mock    → MockEmbedder    (testing only, zero dependencies)
 
 Custom embedder registration:
@@ -18,7 +18,8 @@ Custom embedder registration:
 from __future__ import annotations
 
 import importlib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from codex_wise.core.providers.embedding.base import Embedder
 

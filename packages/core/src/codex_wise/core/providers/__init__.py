@@ -1,7 +1,7 @@
 """Codex Wise provider package.
 
 Sub-packages:
-    llm/       — LLM providers (Anthropic, OpenAI, OpenRouter, Gemini, Ollama, LiteLLM)
+    llm/       — LLM providers (Codex app-server, Anthropic, OpenAI, OpenRouter, Gemini, Ollama, LiteLLM)
     embedding/ — Embedding providers (OpenAI, Gemini, Mock)
 
 Preferred entry points:
@@ -9,7 +9,7 @@ Preferred entry points:
     from codex_wise.core.providers.llm import get_provider
     from codex_wise.core.providers.embedding import get_embedder
 
-    provider = get_provider("openai", api_key="sk-...", model="gpt-5.4-nano")
+    provider = get_provider("codex")
     response = await provider.generate(system_prompt="...", user_prompt="...")
 
     embedder = get_embedder("openai", api_key="sk-...")

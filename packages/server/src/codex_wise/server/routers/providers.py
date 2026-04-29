@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
+
 from codex_wise.server.deps import verify_api_key
 from codex_wise.server.provider_config import (
     list_provider_status,
+    list_provider_status_async,
     set_active_provider,
     set_api_key,
 )
@@ -21,7 +23,7 @@ router = APIRouter(
 @router.get("")
 async def get_providers():
     """List all providers with their status and active selection."""
-    return list_provider_status()
+    return await list_provider_status_async()
 
 
 @router.patch("/active")

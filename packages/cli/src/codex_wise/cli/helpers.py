@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 from typing import Any, TypeVar
 
-import click
 from rich.console import Console
 
 CONFIG_FILENAME = "config.yaml"
@@ -226,9 +225,11 @@ def resolve_provider(
       1. Explicit ``--provider`` flag
       2. ``CODEX_WISE_PROVIDER`` env var
       3. active storage ``config.yaml`` (written by ``codex-wise init``)
-      4. Auto-detect from API key env vars
+      4. Codex app-server (default, no provider API key required)
+      5. Legacy auto-detect from API key env vars
     """
     from codex_wise.core.providers import get_provider
+    from codex_wise.core.providers.llm.codex_app_server import is_codex_cli_available
 
     cfg: dict[str, Any] = {}
     if repo_path is not None:
@@ -262,9 +263,9 @@ def resolve_provider(
                 return base_url
         return None
 
-    if provider_name is not None:
+    def _create_provider(name: str) -> Any:
         # Validate configuration before attempting to create provider
-        warnings = validate_provider_config(provider_name)
+        warnings = validate_provider_config(name)
         if warnings:
             for warning in warnings:
                 err_console.print(f"[yellow]Warning:[/yellow] {warning}")
@@ -274,25 +275,35 @@ def resolve_provider(
         kwargs: dict[str, Any] = {}
         if model:
             kwargs["model"] = model
-        base_url = _resolve_base_url(provider_name)
+        if name == "codex" and repo_path is not None:
+            kwargs["cwd"] = str(repo_path)
+        base_url = _resolve_base_url(name)
         if base_url:
             kwargs["base_url"] = base_url
 
         # Pass API key from environment if available
-        if provider_name == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
+        if name == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
             kwargs["api_key"] = os.environ["ANTHROPIC_API_KEY"]
-        elif provider_name == "openai" and os.environ.get("OPENAI_API_KEY"):
+        elif name == "openai" and os.environ.get("OPENAI_API_KEY"):
             kwargs["api_key"] = os.environ["OPENAI_API_KEY"]
-        elif provider_name == "gemini" and (
+        elif name == "gemini" and (
             os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         ):
             kwargs["api_key"] = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        elif provider_name == "openrouter" and os.environ.get("OPENROUTER_API_KEY"):
+        elif name == "openrouter" and os.environ.get("OPENROUTER_API_KEY"):
             kwargs["api_key"] = os.environ["OPENROUTER_API_KEY"]
-        elif provider_name == "ollama" and os.environ.get("OLLAMA_BASE_URL"):
+        elif name == "ollama" and os.environ.get("OLLAMA_BASE_URL"):
             kwargs["base_url"] = os.environ["OLLAMA_BASE_URL"]
 
-        return get_provider(provider_name, **kwargs)
+        return get_provider(name, **kwargs)
+
+    if provider_name is not None:
+        return _create_provider(provider_name)
+
+    # Codex is the default integration path. If the CLI is unavailable, keep
+    # legacy API-key autodetection as a compatibility fallback.
+    if is_codex_cli_available():
+        return _create_provider("codex")
 
     # Auto-detect from env vars
     if os.environ.get("ANTHROPIC_API_KEY") and os.environ["ANTHROPIC_API_KEY"].strip():
@@ -339,10 +350,7 @@ def resolve_provider(
             kwargs["base_url"] = base_url
         return get_provider("gemini", **kwargs)
 
-    raise click.ClickException(
-        "No provider configured. Use --provider, set CODEX_WISE_PROVIDER, "
-        "or set ANTHROPIC_API_KEY / OPENAI_API_KEY / OPENROUTER_API_KEY / OLLAMA_BASE_URL / GEMINI_API_KEY / GOOGLE_API_KEY."
-    )
+    return _create_provider("codex")
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +381,7 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
 
     # Define required environment variables for each provider
     provider_env_vars = {
+        "codex": [],
         "anthropic": ["ANTHROPIC_API_KEY"],
         "openai": ["OPENAI_API_KEY"],
         "openrouter": ["OPENROUTER_API_KEY"],
@@ -388,6 +397,8 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
             return warnings
 
         env_vars = provider_env_vars[provider_name]
+        if not env_vars:
+            return warnings
         missing_vars = []
 
         if provider_name == "gemini":

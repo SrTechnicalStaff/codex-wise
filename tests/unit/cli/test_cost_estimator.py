@@ -146,6 +146,12 @@ class TestEstimateCost:
         assert est.estimated_cost_usd == 0.0
         assert est.total_pages == 5
 
+    def test_codex_provider_zero_usd_cost(self):
+        plans = [PageTypePlan("file_page", 5, 2)]
+        est = estimate_cost(plans, "codex", "gpt-5.5")
+        assert est.estimated_cost_usd == 0.0
+        assert est.total_pages == 5
+
     def test_anthropic_has_cost(self):
         plans = [PageTypePlan("file_page", 10, 2)]
         est = estimate_cost(plans, "anthropic", "claude-sonnet-4-6")

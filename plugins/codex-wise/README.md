@@ -26,6 +26,4 @@ codex-wise doctor
 
 The generated MCP configuration intentionally omits a fixed repository path so Codex Wise can resolve the current project when the plugin is used.
 
-## TODO Before Publishing
-
-Fill the remaining publisher, homepage, repository, privacy, and terms placeholders in `.codex-plugin/plugin.json`.
+Keep the plugin manifest version aligned with the packaged `codex-wise` runtime version when cutting a release.

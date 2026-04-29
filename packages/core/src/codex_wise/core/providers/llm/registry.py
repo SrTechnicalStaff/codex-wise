@@ -5,6 +5,7 @@ Supports built-in providers and runtime registration of custom providers,
 enabling community-contributed providers without forking codex_wise.
 
 Built-in providers:
+    - codex      → CodexAppServerProvider
     - anthropic   → AnthropicProvider
     - openai      → OpenAIProvider
     - openrouter  → OpenRouterProvider
@@ -25,7 +26,8 @@ Custom provider registration:
 from __future__ import annotations
 
 import importlib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from codex_wise.core.providers.llm.base import BaseProvider
 from codex_wise.core.rate_limiter import PROVIDER_DEFAULTS, RateLimitConfig, RateLimiter
@@ -35,6 +37,7 @@ from codex_wise.core.rate_limiter import PROVIDER_DEFAULTS, RateLimitConfig, Rat
 # This means `pip install codex-wise-core` without anthropic installed still works —
 # you just can't use the anthropic provider.
 _BUILTIN_PROVIDERS: dict[str, tuple[str, str]] = {
+    "codex": ("codex_wise.core.providers.llm.codex_app_server", "CodexAppServerProvider"),
     "anthropic": ("codex_wise.core.providers.llm.anthropic", "AnthropicProvider"),
     "openai": ("codex_wise.core.providers.llm.openai", "OpenAIProvider"),
     "openrouter": ("codex_wise.core.providers.llm.openrouter", "OpenRouterProvider"),
@@ -138,8 +141,14 @@ def get_provider(
             "ollama": "openai",  # ollama uses the openai package
             "openrouter": "openai",  # openrouter uses the openai package
             "litellm": "litellm",
+            "codex": "codex CLI",
         }
         package = _missing.get(name, name)
+        if name == "codex":
+            raise ImportError(
+                "Provider 'codex' requires the Codex CLI with app-server support. "
+                "Install Codex or set CODEX_WISE_CODEX_COMMAND."
+            ) from exc
         raise ImportError(
             f"Provider {name!r} requires the '{package}' package. "
             f"Install it with: pip install {package}"

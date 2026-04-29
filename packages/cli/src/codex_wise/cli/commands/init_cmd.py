@@ -339,13 +339,20 @@ def _run_workspace_generation(
     )
     est = estimate_cost(plans, provider.provider_name, provider.model_name)
 
-    console.print(
-        f"    Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
-        f"(${est.estimated_cost_usd:.2f} USD, {est.total_pages} pages)"
-    )
+    if provider.provider_name == "codex":
+        console.print(
+            f"    Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
+            f"(Codex subscription usage, {est.total_pages} pages)"
+        )
+    else:
+        console.print(
+            f"    Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
+            f"(${est.estimated_cost_usd:.2f} USD, {est.total_pages} pages)"
+        )
 
     if (
-        est.estimated_cost_usd > 2.00
+        provider.provider_name != "codex"
+        and est.estimated_cost_usd > 2.00
         and not yes
         and not click.confirm(f"    Cost for {repo_path.name} exceeds $2.00. Continue?")
     ):
@@ -725,7 +732,7 @@ def _workspace_init(
         next_steps = [
             (command("mcp", "<repo-path>"), "start MCP server for a repo"),
             (command("status", "--workspace"), "show workspace status"),
-            (command("init", "<repo>", "--provider", "gemini"), "generate full docs for a repo"),
+            (command("init", "<repo>"), "generate full docs for a repo"),
         ]
     else:
         next_steps = [
@@ -766,7 +773,7 @@ def _workspace_init(
     "--provider",
     "provider_name",
     default=None,
-    help="LLM provider name (anthropic, openai, gemini, ollama, mock).",
+    help="LLM provider name (default: codex; legacy: anthropic, openai, gemini, ollama, mock).",
 )
 @click.option("--model", default=None, help="Model identifier override.")
 @click.option(
@@ -1173,10 +1180,16 @@ def init_command(
             lang_parts = [f"{lang} {pct:.0%}" for lang, pct in lang_items]
             console.print(f"  Languages: {', '.join(lang_parts)}")
 
-        console.print(
-            f"  Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
-            f"(${est.estimated_cost_usd:.2f} USD)"
-        )
+        if provider.provider_name == "codex":
+            console.print(
+                f"  Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
+                "(Codex subscription usage)"
+            )
+        else:
+            console.print(
+                f"  Estimated tokens: ~{est.estimated_input_tokens + est.estimated_output_tokens:,} "
+                f"(${est.estimated_cost_usd:.2f} USD)"
+            )
         console.print()
 
         if dry_run:
@@ -1184,7 +1197,8 @@ def init_command(
             return
 
         if (
-            est.estimated_cost_usd > 2.00
+            provider.provider_name != "codex"
+            and est.estimated_cost_usd > 2.00
             and not yes
             and not click.confirm("  Estimated cost exceeds $2.00. Continue?")
         ):

@@ -46,6 +46,8 @@ _warned_models: set[str] = set()
 
 def _get_pricing(model: str) -> dict[str, float]:
     """Return pricing for *model*, falling back and warning if unknown."""
+    if model.startswith("codex:"):
+        return {"input": 0.0, "output": 0.0}
     if model in _PRICING:
         return _PRICING[model]
     if model not in _warned_models:
@@ -171,8 +173,8 @@ class CostTracker:
     ) -> None:
         """Write a row to the ``llm_costs`` table."""
         try:
-            from codex_wise.core.persistence.models import LlmCost
             from codex_wise.core.persistence import get_session
+            from codex_wise.core.persistence.models import LlmCost
 
             async with get_session(self._session_factory) as session:
                 row = LlmCost(
@@ -218,8 +220,9 @@ class CostTracker:
 
         try:
             import sqlalchemy as sa
-            from codex_wise.core.persistence.models import LlmCost
+
             from codex_wise.core.persistence import get_session
+            from codex_wise.core.persistence.models import LlmCost
 
             async with get_session(self._session_factory) as session:
                 if group_by == "model":

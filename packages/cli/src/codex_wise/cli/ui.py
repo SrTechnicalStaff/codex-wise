@@ -249,7 +249,7 @@ def print_phase_header(
 
 
 # ---------------------------------------------------------------------------
-# Provider metadata  —  order matters (gemini first = default)
+# Provider metadata  —  external providers are explicit/legacy choices.
 # ---------------------------------------------------------------------------
 
 _PROVIDER_DEFAULTS: dict[str, str] = {
@@ -419,10 +419,116 @@ def interactive_provider_select(
     *,
     repo_path: Path | None = None,
 ) -> tuple[str, str]:
-    """Show provider table, handle selection + inline key entry + save.
+    """Resolve the interactive generation provider.
 
-    Returns ``(provider_name, model_name)``.
+    Codex app-server is the default path and does not require provider API-key
+    entry.  Set ``CODEX_WISE_SHOW_EXTERNAL_PROVIDERS=1`` to expose the legacy
+    provider/API-key picker.
     """
+    if os.environ.get("CODEX_WISE_SHOW_EXTERNAL_PROVIDERS", "").strip() != "1":
+        return interactive_codex_model_select(console, model_flag)
+
+    return _interactive_external_provider_select(
+        console,
+        model_flag,
+        repo_path=repo_path,
+    )
+
+
+def interactive_codex_model_select(
+    console: Console,
+    model_flag: str | None,
+) -> tuple[str, str]:
+    """Use Codex app-server auth/model discovery for interactive generation."""
+    from codex_wise.cli.helpers import run_async
+    from codex_wise.core.providers.llm.codex_app_server import (
+        choose_codex_model,
+        format_codex_model_label,
+        list_codex_models,
+    )
+
+    console.print()
+    console.print("[bold]Codex app-server[/bold]")
+    console.print("  [dim]Uses your Codex account, approval flow, and live model catalog.[/dim]")
+    console.print("  [dim]No provider API key is required.[/dim]")
+    console.print()
+
+    try:
+        with console.status("  Checking Codex auth and models…", spinner="dots"):
+            models = run_async(
+                list_codex_models(
+                    include_hidden=bool(model_flag),
+                    auto_login=True,
+                )
+            )
+    except Exception as exc:
+        console.print(
+            f"  [{WARN}]Codex model discovery failed:[/] {exc}"
+        )
+        console.print("  [dim]Continuing with Codex; generation will retry auth/model discovery.[/dim]")
+        return "codex", model_flag or ""
+
+    selection = choose_codex_model(models, requested_model=model_flag)
+    if model_flag:
+        console.print(f"  Model: [cyan]{selection.model}[/cyan]")
+        console.print(
+            f"  Reasoning: [cyan]{selection.reasoning_effort or 'provider default'}[/cyan]"
+        )
+        return "codex", selection.model
+
+    visible = [m for m in models if not m.get("hidden")] or models
+    display_models = visible[:20]
+    default_model = selection.model
+    default_idx = "1"
+
+    table = Table(
+        show_header=True,
+        box=None,
+        padding=(0, 2),
+        title="[bold]Available Codex Models[/bold]",
+        title_style="",
+    )
+    table.add_column("#", style=BRAND_STYLE, width=4)
+    table.add_column("Model", style="bold", min_width=20)
+    table.add_column("Default Effort", style="dim", min_width=14)
+    table.add_column("Status", min_width=12)
+
+    for idx, model_info in enumerate(display_models, 1):
+        model_id = str(model_info.get("model") or model_info.get("id") or "")
+        if model_id == default_model:
+            default_idx = str(idx)
+        status = "[green]recommended[/green]" if model_info.get("isDefault") else ""
+        table.add_row(
+            f"[{idx}]",
+            format_codex_model_label(model_info),
+            str(model_info.get("defaultReasoningEffort") or "default"),
+            status,
+        )
+
+    console.print(table)
+    if len(visible) > len(display_models):
+        console.print(f"  [dim]Showing {len(display_models)} of {len(visible)} visible models.[/dim]")
+    console.print("  [dim]Reasoning effort uses the selected model default.[/dim]")
+    console.print()
+
+    chosen_idx = Prompt.ask(
+        "  Select model",
+        choices=[str(i) for i in range(1, len(display_models) + 1)],
+        default=default_idx,
+        console=console,
+    )
+    chosen = display_models[int(chosen_idx) - 1]
+    chosen_model = str(chosen.get("model") or chosen.get("id") or default_model)
+    return "codex", chosen_model
+
+
+def _interactive_external_provider_select(
+    console: Console,
+    model_flag: str | None,
+    *,
+    repo_path: Path | None = None,
+) -> tuple[str, str]:
+    """Show legacy provider table, handle selection + inline key entry + save."""
     providers = list(_PROVIDER_ENV.keys())  # gemini first
     detected = _detect_provider_status()
 
@@ -481,7 +587,11 @@ def interactive_provider_select(
         key = _prompt_api_key(console, chosen, env_var, repo_path=repo_path)
         if not key:
             console.print(f"  [{WARN}]Skipped. Please select another provider.[/]")
-            return interactive_provider_select(console, model_flag, repo_path=repo_path)
+            return _interactive_external_provider_select(
+                console,
+                model_flag,
+                repo_path=repo_path,
+            )
 
     # --- model ---
     default_model = _PROVIDER_DEFAULTS.get(chosen, "")
@@ -857,7 +967,7 @@ def build_contextual_next_steps(
 
     if index_only:
         steps.append((command("mcp", "."), "start MCP server for AI assistants"))
-        steps.append((command("init", "--provider", "gemini"), "generate full documentation"))
+        steps.append((command("init"), "generate full documentation"))
     else:
         steps.append((command("mcp", "."), "start MCP server for AI assistants"))
         steps.append((command("search", "<query>"), "search the generated wiki"))
@@ -1096,8 +1206,8 @@ class RichProgressCallback:
     def on_message(self, level: str, text: str) -> None:
         style_map = {"info": OK, "warning": WARN, "error": ERR}
         style = style_map.get(level, "")
-        # Insight lines (indented with →) get special formatting
-        if text.lstrip().startswith("→"):
+        # Insight lines get special formatting.
+        if text.lstrip().startswith((">", "→")):
             self._progress.console.print(f"  [dim]{text}[/dim]")
         elif style:
             self._progress.console.print(f"  [{style}]{text}[/{style}]")

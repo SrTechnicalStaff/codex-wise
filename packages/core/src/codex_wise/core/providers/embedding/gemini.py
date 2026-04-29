@@ -1,6 +1,6 @@
 """Gemini embedding support for Codex Wise semantic search.
 
-Uses the Google GenAI SDK (google-genai) with the gemini-embedding-001 model.
+Uses the Google GenAI SDK (google-genai) with the gemini-embedding-2 model.
 This embedder satisfies the Embedder protocol and can be passed to any
 Codex Wise vector store (InMemoryVectorStore, LanceDBVectorStore, PgVectorStore).
 
@@ -18,8 +18,9 @@ Usage:
     results = await store.search("auth service", limit=5)
 
 Dimensions:
-    gemini-embedding-001 produces 768-dimensional vectors by default.
-    You can request up to 3072 dimensions via output_dimensionality.
+    gemini-embedding-2 can output up to 3072 dimensions. Codex Wise defaults to
+    768 dimensions to keep local vector indexes compact; set
+    CODEX_WISE_EMBEDDING_DIMS=3072 for maximum quality.
 """
 
 from __future__ import annotations
@@ -39,11 +40,13 @@ class GeminiEmbedder:
 
     Args:
         api_key:              Google Gemini API key. Falls back to GEMINI_API_KEY env var.
-        model:                Embedding model name. Default: "gemini-embedding-001".
+        model:                Embedding model name. Default: "gemini-embedding-2".
         task_type:            Embedding task type. "SEMANTIC_SIMILARITY" is best for
-                              semantic search. Other options: "RETRIEVAL_DOCUMENT",
-                              "RETRIEVAL_QUERY", "CLUSTERING", "CLASSIFICATION".
+                              Embeddings 1. Embeddings 2 does not support this
+                              API field and uses prompt prefixes instead.
         output_dimensionality: Override output vector size (default: 768, max: 3072).
+        query_task:           Embeddings 2 query prefix task. Defaults to
+                              "code retrieval" for codebase search.
     """
 
     # Default timeout for embedding API calls (seconds).
@@ -53,9 +56,10 @@ class GeminiEmbedder:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "gemini-embedding-001",
+        model: str | None = None,
         task_type: str = "SEMANTIC_SIMILARITY",
-        output_dimensionality: int = 768,
+        output_dimensionality: int | None = None,
+        query_task: str | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
     ) -> None:
         self._api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -63,9 +67,21 @@ class GeminiEmbedder:
             raise ValueError(
                 "Gemini API key required. Pass api_key= or set GEMINI_API_KEY env var."
             )
-        self._model = model
+        self._model = (
+            model
+            or os.environ.get("CODEX_WISE_GEMINI_EMBEDDING_MODEL")
+            or os.environ.get("CODEX_WISE_EMBEDDING_MODEL")
+            or "gemini-embedding-2"
+        )
         self._task_type = task_type
-        self._output_dimensionality = output_dimensionality
+        self._output_dimensionality = output_dimensionality or int(
+            os.environ.get("CODEX_WISE_EMBEDDING_DIMS", "768")
+        )
+        self._query_task = (
+            query_task
+            or os.environ.get("CODEX_WISE_GEMINI_EMBEDDING_QUERY_TASK")
+            or "code retrieval"
+        )
         self._timeout = timeout
         self._client: object | None = None  # cached; created once on first embed()
 
@@ -93,6 +109,7 @@ class GeminiEmbedder:
         task_type = self._task_type
         output_dimensionality = self._output_dimensionality
         timeout = self._timeout
+        is_embedding_2 = self._is_embedding_2
 
         def _embed_sync() -> list[list[float]]:
             from google import genai  # type: ignore[import-untyped]
@@ -109,21 +126,61 @@ class GeminiEmbedder:
                     kwargs["http_options"] = http_options
                 self._client = genai.Client(**kwargs)
 
-            config = genai_types.EmbedContentConfig(
-                task_type=task_type,
-                output_dimensionality=output_dimensionality,
-            )
+            config_kwargs = {"output_dimensionality": output_dimensionality}
+            if not is_embedding_2:
+                config_kwargs["task_type"] = task_type
 
-            result = self._client.models.embed_content(  # type: ignore[union-attr]
-                model=model,
-                contents=texts,
-                config=config,
-            )
+            config = genai_types.EmbedContentConfig(**config_kwargs)
 
-            raw_vectors = [list(e.values) for e in result.embeddings]
+            if is_embedding_2:
+                # Embeddings 2 aggregates multiple contents into one vector, so
+                # preserve the Embedder protocol by issuing one request per text.
+                raw_vectors = []
+                for text in texts:
+                    result = self._client.models.embed_content(  # type: ignore[union-attr]
+                        model=model,
+                        contents=text,
+                        config=config,
+                    )
+                    raw_vectors.append(list(result.embeddings[0].values))
+            else:
+                result = self._client.models.embed_content(  # type: ignore[union-attr]
+                    model=model,
+                    contents=texts,
+                    config=config,
+                )
+                raw_vectors = [list(e.values) for e in result.embeddings]
             return [_l2_normalize(v) for v in raw_vectors]
 
         return await asyncio.to_thread(_embed_sync)
+
+    @property
+    def _is_embedding_2(self) -> bool:
+        return self._model == "gemini-embedding-2" or self._model.startswith(
+            "gemini-embedding-2-"
+        )
+
+    def prepare_query(self, query: str) -> str:
+        """Apply the Gemini Embedding 2 retrieval query prefix."""
+        if not self._is_embedding_2:
+            return query
+        return f"task: {self._query_task} | query: {query}"
+
+    def prepare_document(self, content: str, title: str | None = None) -> str:
+        """Apply the Gemini Embedding 2 retrieval document format."""
+        if not self._is_embedding_2:
+            return content
+        raw_title = str(title).strip() if title is not None else ""
+        safe_title = raw_title or "none"
+        return f"title: {safe_title} | text: {content}"
+
+    async def embed_query(self, query: str) -> list[float]:
+        """Embed a retrieval query using Embedding 2 prompt prefixes."""
+        return (await self.embed([self.prepare_query(query)]))[0]
+
+    async def embed_document(self, content: str, title: str | None = None) -> list[float]:
+        """Embed a retrievable document using Embedding 2 document formatting."""
+        return (await self.embed([self.prepare_document(content, title)]))[0]
 
 
 def _l2_normalize(vec: list[float]) -> list[float]:

@@ -258,16 +258,43 @@ class TestErrorCases:
         result = runner.invoke(cli, ["init", bad_path])
         assert result.exit_code != 0
 
-    def test_init_no_provider(self, runner, tmp_path, monkeypatch):
-        """init with no provider configured should error."""
+    def test_init_no_provider_uses_codex_default(self, runner, tmp_path, monkeypatch):
+        """init with no API provider configured should use the Codex default."""
+        from codex_wise.core.providers.llm.base import GeneratedResponse
+
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
         monkeypatch.delenv("CODEX_WISE_PROVIDER", raising=False)
-        result = runner.invoke(cli, ["init", str(tmp_path)])
-        assert result.exit_code != 0
+        seen = {}
+
+        class FakeCodexProvider:
+            provider_name = "codex"
+            model_name = "gpt-5.5"
+
+            async def generate(self, *args, **kwargs):
+                return GeneratedResponse(content="OK", input_tokens=1, output_tokens=1)
+
+        def fake_resolve_provider(provider_name, model, repo_path):
+            seen["provider_name"] = provider_name
+            seen["model"] = model
+            seen["repo_path"] = repo_path
+            return FakeCodexProvider()
+
+        monkeypatch.setattr(
+            "codex_wise.cli.commands.init_cmd.resolve_provider",
+            fake_resolve_provider,
+        )
+
+        result = runner.invoke(cli, ["init", str(tmp_path), "--dry-run"])
+
+        assert result.exit_code == 0, result.output
+        assert seen["provider_name"] is None
+        assert seen["model"] is None
+        assert seen["repo_path"] == tmp_path.resolve()
+        assert "Provider: codex" in result.output
 
     def test_status_no_codex_wise_dir(self, runner, tmp_path):
         result = runner.invoke(cli, ["status", str(tmp_path)], prog_name="codex-wise")

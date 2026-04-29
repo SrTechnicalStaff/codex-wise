@@ -8,11 +8,11 @@ from typing import Any
 import pytest
 
 from codex_wise.cli.helpers import (
-    ensure_codex_wise_dir,
     CONFIG_FILENAME,
+    ensure_codex_wise_dir,
+    get_codex_wise_dir,
     get_db_url_for_repo,
     get_head_commit,
-    get_codex_wise_dir,
     load_state,
     resolve_provider,
     resolve_repo_path,
@@ -150,6 +150,12 @@ class TestValidateProviderConfig:
 
         assert validate_provider_config() == []
 
+    def test_codex_provider_needs_no_api_key(self, monkeypatch):
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "codex")
+
+        assert validate_provider_config("codex") == []
+        assert validate_provider_config() == []
+
     def test_anthropic_missing_key(self, monkeypatch):
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         monkeypatch.setenv("CODEX_WISE_PROVIDER", "anthropic")
@@ -243,6 +249,28 @@ class TestValidateProviderConfig:
 
 
 class TestResolveProviderBaseUrl:
+    @staticmethod
+    def test_defaults_to_codex_when_cli_available(monkeypatch, tmp_path):
+        captured: dict[str, Any] = {}
+
+        def fake_get_provider(name: str, **kwargs: Any):
+            captured["name"] = name
+            captured["kwargs"] = kwargs
+            return "provider"
+
+        monkeypatch.setattr("codex_wise.core.providers.get_provider", fake_get_provider)
+        monkeypatch.setattr(
+            "codex_wise.core.providers.llm.codex_app_server.is_codex_cli_available",
+            lambda: True,
+        )
+        monkeypatch.delenv("CODEX_WISE_PROVIDER", raising=False)
+
+        result = resolve_provider(None, None, repo_path=tmp_path)
+
+        assert result == "provider"
+        assert captured["name"] == "codex"
+        assert captured["kwargs"].get("cwd") == str(tmp_path)
+
     @staticmethod
     def test_env_base_url_forwarded(monkeypatch, tmp_path):
         captured: dict[str, Any] = {}

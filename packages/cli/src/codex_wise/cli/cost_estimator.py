@@ -264,7 +264,10 @@ def estimate_cost(
         total_input += inp * plan.count
         total_output += out * plan.count
 
-    input_rate, output_rate = _lookup_cost(model_name)
+    if provider_name == "codex":
+        input_rate, output_rate = (0.0, 0.0)
+    else:
+        input_rate, output_rate = _lookup_cost(model_name)
 
     cost = (total_input / 1000) * input_rate + (total_output / 1000) * output_rate
 

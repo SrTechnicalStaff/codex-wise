@@ -256,20 +256,20 @@ async def run_pipeline(
         _n_edges = _g.number_of_edges()
         progress.on_message(
             "info",
-            f"→ {len(parsed_files):,} files parsed · "
+            f"> {len(parsed_files):,} files parsed; "
             f"{sum(len(pf.symbols) for pf in parsed_files):,} symbols extracted",
         )
         progress.on_message(
             "info",
-            f"→ Graph: {_n_nodes:,} nodes · {_n_edges:,} edges",
+            f"> Graph: {_n_nodes:,} nodes; {_n_edges:,} edges",
         )
         if git_summary and git_summary.files_indexed:
             _hotspot_msg = ""
             if hasattr(git_summary, "hotspots") and git_summary.hotspots:
-                _hotspot_msg = f" · {git_summary.hotspots} hotspots"
+                _hotspot_msg = f"; {git_summary.hotspots} hotspots"
             progress.on_message(
                 "info",
-                f"→ Git: {git_summary.files_indexed:,} files indexed{_hotspot_msg}",
+                f"> Git: {git_summary.files_indexed:,} files indexed{_hotspot_msg}",
             )
 
     # Test-run: limit to top 10 files by PageRank
@@ -654,8 +654,8 @@ async def _run_dead_code_analysis(
             unused_exports = sum(1 for f in report.findings if f.kind.value == "unused_export")
             progress.on_message(
                 "info",
-                f"→ {unreachable} unreachable files · "
-                f"{unused_exports} unused exports · ~{report.deletable_lines:,} deletable lines",
+                f"> {unreachable} unreachable files; "
+                f"{unused_exports} unused exports; ~{report.deletable_lines:,} deletable lines",
             )
 
         return report
@@ -699,7 +699,7 @@ async def _run_decision_extraction(
             total_decisions = inline + readme + git_arch
             progress.on_message(
                 "info",
-                f"→ {total_decisions} decisions: {inline} inline · {readme} from docs · {git_arch} from git",
+                f"> {total_decisions} decisions: {inline} inline; {readme} from docs; {git_arch} from git",
             )
 
         return report

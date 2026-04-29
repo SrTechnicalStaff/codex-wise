@@ -20,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 PROVIDER_CATALOG: list[dict[str, Any]] = [
     {
+        "id": "codex",
+        "name": "Codex",
+        "default_model": "codex-default",
+        "models": ["codex-default"],
+        "env_keys": [],
+        "requires_key": False,
+    },
+    {
         "id": "gemini",
         "name": "Google Gemini",
         "default_model": "gemini-3.1-flash-lite-preview",
@@ -148,31 +156,42 @@ def _get_base_url_for_provider(provider_id: str) -> str | None:
     return None
 
 
-def list_provider_status() -> dict[str, Any]:
-    """Return the full provider status including active selection."""
+def _is_provider_configured(provider: dict[str, Any]) -> bool:
+    if provider["id"] == "codex":
+        try:
+            from codex_wise.core.providers.llm.codex_app_server import is_codex_cli_available
+
+            return is_codex_cli_available()
+        except Exception:
+            return False
+    return bool(_get_key_for_provider(provider["id"])) or not provider["requires_key"]
+
+
+def _build_provider_status(catalog: list[dict[str, Any]]) -> dict[str, Any]:
     config = _load_config()
     active_id = config.get("active_provider")
     active_model = config.get("active_model")
 
     # Auto-detect active if not set
     if not active_id:
-        for p in PROVIDER_CATALOG:
-            if _get_key_for_provider(p["id"]) or not p["requires_key"]:
+        for p in catalog:
+            if _is_provider_configured(p):
                 active_id = p["id"]
                 active_model = p["default_model"]
                 break
 
     providers = []
-    for p in PROVIDER_CATALOG:
-        has_key = bool(_get_key_for_provider(p["id"]))
-        configured = has_key or not p["requires_key"]
+    catalog_by_id = {p["id"]: p for p in catalog}
+    for p in catalog:
         providers.append(
             {
                 "id": p["id"],
                 "name": p["name"],
                 "models": p["models"],
                 "default_model": p["default_model"],
-                "configured": configured,
+                "configured": _is_provider_configured(p),
+                **({"model_details": p["model_details"]} if "model_details" in p else {}),
+                **({"status_error": p["status_error"]} if "status_error" in p else {}),
             }
         )
 
@@ -180,10 +199,41 @@ def list_provider_status() -> dict[str, Any]:
         "active": {
             "provider": active_id,
             "model": active_model
-            or (_CATALOG_BY_ID.get(active_id, {}).get("default_model") if active_id else None),
+            or (catalog_by_id.get(active_id, {}).get("default_model") if active_id else None),
         },
         "providers": providers,
     }
+
+
+def list_provider_status() -> dict[str, Any]:
+    """Return the full provider status including active selection."""
+    return _build_provider_status(PROVIDER_CATALOG)
+
+
+async def list_provider_status_async() -> dict[str, Any]:
+    """Return provider status, hydrating Codex model metadata when available."""
+    catalog = [dict(p) for p in PROVIDER_CATALOG]
+    codex_provider = next((p for p in catalog if p["id"] == "codex"), None)
+    if codex_provider is not None:
+        try:
+            from codex_wise.core.providers.llm.codex_app_server import (
+                choose_codex_model,
+                list_codex_models,
+            )
+
+            models = await list_codex_models(auto_login=False)
+            if models:
+                selection = choose_codex_model(models)
+                codex_provider["models"] = [
+                    str(m.get("model") or m.get("id"))
+                    for m in models
+                    if m.get("model") or m.get("id")
+                ]
+                codex_provider["default_model"] = selection.model
+                codex_provider["model_details"] = models
+        except Exception as exc:
+            codex_provider["status_error"] = str(exc)
+    return _build_provider_status(catalog)
 
 
 def get_active_provider() -> tuple[str | None, str | None]:
@@ -199,7 +249,10 @@ def set_active_provider(provider_id: str, model: str | None = None) -> None:
         raise ValueError(f"Unknown provider: {provider_id}")
     config = _load_config()
     config["active_provider"] = provider_id
-    config["active_model"] = model or _CATALOG_BY_ID[provider_id]["default_model"]
+    if provider_id == "codex":
+        config["active_model"] = model
+    else:
+        config["active_model"] = model or _CATALOG_BY_ID[provider_id]["default_model"]
     _save_config(config)
 
 
@@ -207,6 +260,8 @@ def set_api_key(provider_id: str, key: str | None) -> None:
     """Store or remove an API key for a provider."""
     if provider_id not in _CATALOG_BY_ID:
         raise ValueError(f"Unknown provider: {provider_id}")
+    if provider_id == "codex":
+        raise ValueError("Codex uses the Codex app-server account login; API keys are not supported.")
     config = _load_config()
     keys = config.setdefault("keys", {})
     if key:
@@ -231,7 +286,12 @@ def get_chat_provider_instance():
     base_url = _get_base_url_for_provider(provider_id)
     catalog = _CATALOG_BY_ID[provider_id]
 
-    kwargs: dict[str, Any] = {"model": model or catalog["default_model"]}
+    kwargs: dict[str, Any] = {}
+    if provider_id == "codex":
+        if model and model != "codex-default":
+            kwargs["model"] = model
+    else:
+        kwargs["model"] = model or catalog["default_model"]
     if api_key:
         kwargs["api_key"] = api_key
     if base_url:

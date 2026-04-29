@@ -10,12 +10,16 @@ registry to instantiate an embedder by name.
 
 Built-in embedders:
     openai  — text-embedding-3-small (1536d), text-embedding-3-large (3072d)
-    gemini  — gemini-embedding-001 (768d, up to 3072d)
+    gemini  — gemini-embedding-2 (768d default, up to 3072d)
     mock    — deterministic 8d vectors (zero deps, testing only)
 """
 
 from codex_wise.core.providers.embedding.base import Embedder, MockEmbedder
-from codex_wise.core.providers.embedding.registry import get_embedder, list_embedders, register_embedder
+from codex_wise.core.providers.embedding.registry import (
+    get_embedder,
+    list_embedders,
+    register_embedder,
+)
 
 __all__ = [
     "Embedder",

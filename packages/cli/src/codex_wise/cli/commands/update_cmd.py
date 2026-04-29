@@ -119,7 +119,7 @@ def _workspace_update(
 
 @click.command("update")
 @click.argument("path", required=False, default=None)
-@click.option("--provider", "provider_name", default=None, help="LLM provider name.")
+@click.option("--provider", "provider_name", default=None, help="LLM provider name (default: codex).")
 @click.option("--model", default=None, help="Model identifier override.")
 @click.option("--since", default=None, help="Base git ref to diff from (overrides state).")
 @click.option("--concurrency", type=int, default=5, help="Max concurrent LLM calls.")
