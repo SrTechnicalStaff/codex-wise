@@ -41,6 +41,8 @@ log = structlog.get_logger(__name__)
 _DEFAULT_REQUEST_TIMEOUT = 120.0
 _DEFAULT_TURN_TIMEOUT = 1_800.0
 _DEFAULT_LOGIN_TIMEOUT = 300.0
+_DEFAULT_CODEX_MODEL = "gpt-5.5"
+_DEFAULT_REASONING_EFFORT = "medium"
 _CLIENT_NAME = "codex_wise"
 _CLIENT_TITLE = "Codex Wise"
 _CODEX_MODEL_PREFIX = "codex:"
@@ -692,11 +694,14 @@ class CodexAppServerProvider(BaseProvider):
             or os.environ.get("CODEX_WISE_CODEX_MODEL")
             or os.environ.get("CODEX_WISE_MODEL")
             or os.environ.get("CODEX_WISE_DOC_MODEL")
+            or _DEFAULT_CODEX_MODEL
         )
         self._requested_effort = (
             reasoning_effort or os.environ.get("CODEX_WISE_CODEX_REASONING_EFFORT")
+            or os.environ.get("CODEX_WISE_REASONING_EFFORT")
+            or _DEFAULT_REASONING_EFFORT
         )
-        self._model = self._requested_model or "codex-default"
+        self._model = self._requested_model
         self._reasoning_effort = self._requested_effort
         self._cwd = str(Path(cwd).resolve()) if cwd else None
         self._codex_command = codex_command

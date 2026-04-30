@@ -48,4 +48,3 @@ codex-wise serve
 | Watch is too noisy | Increase `--debounce` |
 | Hook is missing | Run `codex-wise hook install` |
 | Workspace repo is stale | Run `codex-wise update --workspace` |
-

@@ -26,6 +26,8 @@ async def search(
         results = await fts.search(query, limit=limit)
     else:
         results = await vector_store.search(query, limit=limit)
+        if not results:
+            results = await fts.search(query, limit=limit)
 
     return [
         SearchResultResponse(

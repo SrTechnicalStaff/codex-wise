@@ -61,6 +61,17 @@ Parameters:
 
 Use this before manual search when the question can be answered from indexed pages.
 
+In Codex Desktop/plugin launches, `get_answer` uses the Codex app-server path by default:
+
+```bash
+CODEX_WISE_PROVIDER=codex_app
+CODEX_WISE_CODEX_TRANSPORT=proxy
+CODEX_WISE_DOC_MODEL=gpt-5.5
+CODEX_WISE_CODEX_REASONING_EFFORT=medium
+```
+
+That path does not require a separate external LLM API key. Non-Codex installs can still configure API-key providers explicitly.
+
 ### `get_context`
 
 Parameters:
@@ -119,4 +130,3 @@ Parameters:
 | `repo` | no | Workspace repo alias or `all` |
 
 Use this to review cleanup candidates. Treat findings as candidates unless `safe_to_delete` is true and source verification confirms it.
-

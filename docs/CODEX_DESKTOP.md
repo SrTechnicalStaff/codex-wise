@@ -24,6 +24,7 @@ Open the same root in Codex Desktop and trust the project when prompted. No glob
 command = "C:/path/to/codex-wise.exe"
 args = ["mcp", "C:/path/to/project", "--transport", "stdio"]
 cwd = "C:/path/to/project"
+env = { CODEX_WISE_PROVIDER = "codex_app", CODEX_WISE_CODEX_TRANSPORT = "proxy", CODEX_WISE_DOC_MODEL = "gpt-5.5", CODEX_WISE_CODEX_REASONING_EFFORT = "medium" }
 startup_timeout_sec = 20
 tool_timeout_sec = 120
 ```

@@ -112,4 +112,3 @@ Common failures:
 | Missing database | Run `codex-wise init` |
 | Stale pages | Run `codex-wise update` |
 | Store drift | Run `codex-wise doctor --repair` |
-

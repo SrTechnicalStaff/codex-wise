@@ -18,4 +18,3 @@ codex-wise serve
 ```
 
 See the repository docs for the complete command reference.
-

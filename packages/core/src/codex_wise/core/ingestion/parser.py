@@ -24,6 +24,7 @@ Capture-name conventions (shared across ALL .scm files):
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -519,7 +520,9 @@ class ASTParser:
                 imports=[],
                 exports=[],
                 docstring=None,
-                parse_errors=[],
+                parse_errors=[f"tree-sitter grammar unavailable for {lang}"]
+                if config is not None
+                else [],
             )
 
         # Delegate to special handlers for non-tree-sitter formats
@@ -737,6 +740,7 @@ class ASTParser:
 
         imports: list[Import] = []
         seen_raws: set[str] = set()
+        seen_modules: set[str] = set()
 
         for capture_dict in _run_query(query, tree.root_node):  # type: ignore[attr-defined]
             stmt_nodes = capture_dict.get("import.statement", [])
@@ -754,6 +758,9 @@ class ASTParser:
             module_text = _node_text(module_nodes[0], src).strip().strip("\"'` ")
             if not module_text:
                 continue
+            if module_text in seen_modules:
+                continue
+            seen_modules.add(module_text)
 
             # Language-specific import name + binding extraction
             imported_names, bindings = extract_import_bindings(stmt_node, src, file_info.language)
@@ -769,6 +776,9 @@ class ASTParser:
                     bindings=bindings,
                 )
             )
+
+        if file_info.language == "dart":
+            imports.extend(_extract_dart_uri_directives(src, seen_raws, seen_modules))
 
         return imports
 
@@ -917,6 +927,41 @@ def _collect_error_nodes(root: Node) -> list[str]:
 
     _walk(root)
     return errors
+
+
+_DART_URI_DIRECTIVE_RE = re.compile(
+    r"^\s*(import|export|part)\s+(['\"])(?P<uri>[^'\"]+)\2",
+    re.MULTILINE,
+)
+
+
+def _extract_dart_uri_directives(
+    src: str,
+    seen_raws: set[str],
+    seen_modules: set[str],
+) -> list[Import]:
+    """Extract Dart import/export/part URIs not captured by tree-sitter queries."""
+    imports: list[Import] = []
+    for match in _DART_URI_DIRECTIVE_RE.finditer(src):
+        raw = match.group(0).strip()
+        if raw.startswith("part of"):
+            continue
+        uri = match.group("uri").strip()
+        if not uri or raw in seen_raws or uri in seen_modules:
+            continue
+        seen_raws.add(raw)
+        seen_modules.add(uri)
+        imports.append(
+            Import(
+                raw_statement=raw,
+                module_path=uri,
+                imported_names=[],
+                is_relative=uri.startswith("."),
+                resolved_file=None,
+                bindings=[],
+            )
+        )
+    return imports
 
 
 def _is_async_node(node: Node, src: str) -> bool:

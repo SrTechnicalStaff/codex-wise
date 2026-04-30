@@ -15,4 +15,3 @@ uv run ruff check .
 ```
 
 Keep Codex-facing work focused on the apparatus: project config, MCP behavior, generated `AGENTS.md`, diagnostics, and update flows.
-

@@ -49,4 +49,3 @@ Regenerate it with:
 ```bash
 codex-wise generate-agents-md --workspace
 ```
-

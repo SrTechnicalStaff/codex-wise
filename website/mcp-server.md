@@ -12,6 +12,7 @@ nav_order: 5
 [mcp_servers.codex_wise]
 command = "codex-wise"
 args = ["mcp", "/absolute/path/to/repo", "--transport", "stdio"]
+env = { CODEX_WISE_PROVIDER = "codex_app", CODEX_WISE_CODEX_TRANSPORT = "proxy", CODEX_WISE_DOC_MODEL = "gpt-5.5", CODEX_WISE_CODEX_REASONING_EFFORT = "medium" }
 ```
 
 Manual startup:

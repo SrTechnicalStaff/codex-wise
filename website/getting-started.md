@@ -54,4 +54,3 @@ cd /path/to/workspace
 codex-wise init .
 codex-wise status --workspace
 ```
-

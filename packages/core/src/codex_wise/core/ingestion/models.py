@@ -35,6 +35,7 @@ LanguageTag = Literal[
     "scala",
     "dart",
     "luau",
+    "dart",
     "shell",
     "yaml",
     "json",

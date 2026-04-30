@@ -37,6 +37,12 @@ def test_save_project_codex_config_creates_missing_file(tmp_path: Path) -> None:
     assert entry["command"] == _expected_path(command_path)
     assert entry["args"] == _expected_args(tmp_path)
     assert entry["cwd"] == _expected_path(tmp_path)
+    assert entry["env"] == {
+        "CODEX_WISE_PROVIDER": "codex_app",
+        "CODEX_WISE_CODEX_TRANSPORT": "proxy",
+        "CODEX_WISE_DOC_MODEL": "gpt-5.5",
+        "CODEX_WISE_CODEX_REASONING_EFFORT": "medium",
+    }
     assert entry["startup_timeout_sec"] == 20
     assert entry["tool_timeout_sec"] == 120
 

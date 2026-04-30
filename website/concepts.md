@@ -16,4 +16,3 @@ The apparatus has four parts:
 | Decisions | explicit and discovered rationale linked to code |
 
 Codex consumes this through MCP tools and generated `AGENTS.md`.
-

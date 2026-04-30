@@ -14,4 +14,3 @@ codex-wise serve --no-ui
 ```
 
 The API includes repository, page, graph, search, workspace, job, and generated `AGENTS.md` endpoints.
-

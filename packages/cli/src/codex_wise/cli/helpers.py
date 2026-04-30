@@ -275,7 +275,7 @@ def resolve_provider(
         kwargs: dict[str, Any] = {}
         if model:
             kwargs["model"] = model
-        if name == "codex" and repo_path is not None:
+        if name in {"codex", "codex_app"} and repo_path is not None:
             kwargs["cwd"] = str(repo_path)
         base_url = _resolve_base_url(name)
         if base_url:
@@ -382,6 +382,7 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
     # Define required environment variables for each provider
     provider_env_vars = {
         "codex": [],
+        "codex_app": [],
         "anthropic": ["ANTHROPIC_API_KEY"],
         "openai": ["OPENAI_API_KEY"],
         "openrouter": ["OPENROUTER_API_KEY"],

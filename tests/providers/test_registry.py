@@ -21,6 +21,8 @@ from codex_wise.core.providers.llm.registry import (
 class TestListProviders:
     def test_includes_all_builtin_providers(self) -> None:
         providers = list_providers()
+        assert "codex" in providers
+        assert "codex_app" in providers
         assert "anthropic" in providers
         assert "openai" in providers
         assert "openrouter" in providers
@@ -115,5 +117,5 @@ class TestCustomProviderRegistration:
         assert received.get("api_key") == "key-123"
 
     def test_builtin_count(self) -> None:
-        """Sanity check: we have exactly 7 built-in providers."""
-        assert len(_BUILTIN_PROVIDERS) == 7
+        """Sanity check: we have exactly 9 built-in providers."""
+        assert len(_BUILTIN_PROVIDERS) == 9

@@ -10,6 +10,7 @@ to instantiate a provider by name — this is the preferred entry point.
 
 Built-in providers:
     codex     — installed Codex app-server (default; ChatGPT auth + live models)
+    codex_app — Codex app-server proxy synthesis for Codex plugin/runtime use
     anthropic  — claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5
     openai     — gpt-5.4-nano, gpt-5.4-mini, gpt-5.4
     gemini     — gemini-3.1-flash-lite-preview, gemini-3-flash-preview, gemini-3.1-pro-preview

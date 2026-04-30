@@ -9,7 +9,7 @@ Preferred entry points:
     from codex_wise.core.providers.llm import get_provider
     from codex_wise.core.providers.embedding import get_embedder
 
-    provider = get_provider("codex")
+    provider = get_provider("codex_app")
     response = await provider.generate(system_prompt="...", user_prompt="...")
 
     embedder = get_embedder("openai", api_key="sk-...")
@@ -19,6 +19,7 @@ Backward-compatible imports still work:
     from codex_wise.core.providers import get_provider  # → llm.registry
 """
 
+from codex_wise.core.providers.embedding import get_embedder, list_embedders, register_embedder
 from codex_wise.core.providers.llm.base import (
     BaseProvider,
     ChatProvider,
@@ -29,10 +30,8 @@ from codex_wise.core.providers.llm.base import (
     RateLimitError,
 )
 from codex_wise.core.providers.llm.registry import get_provider, list_providers, register_provider
-from codex_wise.core.providers.embedding import get_embedder, list_embedders, register_embedder
 
 __all__ = [
-    # LLM
     "BaseProvider",
     "ChatProvider",
     "ChatStreamEvent",
@@ -40,11 +39,10 @@ __all__ = [
     "GeneratedResponse",
     "ProviderError",
     "RateLimitError",
-    "get_provider",
-    "list_providers",
-    "register_provider",
-    # Embedding
     "get_embedder",
+    "get_provider",
     "list_embedders",
+    "list_providers",
     "register_embedder",
+    "register_provider",
 ]

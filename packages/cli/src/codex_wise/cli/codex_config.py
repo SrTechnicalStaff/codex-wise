@@ -12,6 +12,7 @@ from pathlib import Path
 import click
 
 _CODEX_WISE_TABLE = "mcp_servers.codex_wise"
+_LEGACY_TABLES = ("mcp_servers.codex-wise",)
 _CODEX_WISE_COMMAND = "codex-wise"
 _STARTUP_TIMEOUT_SEC = 20
 _TOOL_TIMEOUT_SEC = 120
@@ -50,6 +51,12 @@ def generate_codex_mcp_table(
             f"command = {_toml_string(command)}",
             f"args = {json.dumps(args)}",
             f"cwd = {_toml_string(abs_path)}",
+            (
+                'env = { CODEX_WISE_PROVIDER = "codex_app", '
+                'CODEX_WISE_CODEX_TRANSPORT = "proxy", '
+                'CODEX_WISE_DOC_MODEL = "gpt-5.5", '
+                'CODEX_WISE_CODEX_REASONING_EFFORT = "medium" }'
+            ),
             f"startup_timeout_sec = {_STARTUP_TIMEOUT_SEC}",
             f"tool_timeout_sec = {_TOOL_TIMEOUT_SEC}",
         ]
@@ -69,7 +76,7 @@ def save_project_codex_config(
 
     if config_path.exists():
         content = _load_valid_toml_text(config_path)
-        merged = _replace_or_append_table(content, (_CODEX_WISE_TABLE,), table)
+        merged = _replace_or_append_table(content, (_CODEX_WISE_TABLE, *_LEGACY_TABLES), table)
     else:
         merged = table + "\n"
 

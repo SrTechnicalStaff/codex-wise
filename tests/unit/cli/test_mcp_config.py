@@ -58,4 +58,3 @@ def test_merge_mcp_entry_rejects_invalid_existing_file(tmp_path: Path) -> None:
         mcp_config._merge_mcp_entry(config_path, _codex_wise_entry(tmp_path))
 
     assert config_path.read_text(encoding="utf-8") == original
-

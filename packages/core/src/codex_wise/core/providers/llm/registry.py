@@ -6,6 +6,7 @@ enabling community-contributed providers without forking codex_wise.
 
 Built-in providers:
     - codex      → CodexAppServerProvider
+    - codex_app  → CodexAppProvider
     - anthropic   → AnthropicProvider
     - openai      → OpenAIProvider
     - openrouter  → OpenRouterProvider
@@ -38,6 +39,7 @@ from codex_wise.core.rate_limiter import PROVIDER_DEFAULTS, RateLimitConfig, Rat
 # you just can't use the anthropic provider.
 _BUILTIN_PROVIDERS: dict[str, tuple[str, str]] = {
     "codex": ("codex_wise.core.providers.llm.codex_app_server", "CodexAppServerProvider"),
+    "codex_app": ("codex_wise.core.providers.llm.codex_app", "CodexAppProvider"),
     "anthropic": ("codex_wise.core.providers.llm.anthropic", "AnthropicProvider"),
     "openai": ("codex_wise.core.providers.llm.openai", "OpenAIProvider"),
     "openrouter": ("codex_wise.core.providers.llm.openrouter", "OpenRouterProvider"),
@@ -142,11 +144,12 @@ def get_provider(
             "openrouter": "openai",  # openrouter uses the openai package
             "litellm": "litellm",
             "codex": "codex CLI",
+            "codex_app": "codex CLI",
         }
         package = _missing.get(name, name)
-        if name == "codex":
+        if name in {"codex", "codex_app"}:
             raise ImportError(
-                "Provider 'codex' requires the Codex CLI with app-server support. "
+                f"Provider {name!r} requires the Codex CLI with app-server support. "
                 "Install Codex or set CODEX_WISE_CODEX_COMMAND."
             ) from exc
         raise ImportError(

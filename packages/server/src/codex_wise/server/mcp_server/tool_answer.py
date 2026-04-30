@@ -1,15 +1,15 @@
-"""MCP Tool: get_answer — RAG-style synthesis over the wiki layer.
+"""MCP Tool: get_answer - RAG-style synthesis over the wiki layer.
 
 Single-call retrieval + LLM synthesis. Replaces the agent's multi-turn
 search → context → read loop with one tool call that returns:
 
     {
-      "answer":            str   — 2–5 sentence synthesised answer
-      "citations":         list  — file paths backing the answer
-      "confidence":        str   — "high" | "medium" | "low"
-      "fallback_targets":  list  — top retrieval hits the agent should Read
+      "answer":            str   - 2-5 sentence synthesised answer
+      "citations":         list  - file paths backing the answer
+      "confidence":        str   - "high" | "medium" | "low"
+      "fallback_targets":  list  - top retrieval hits the agent should Read
                                    to verify (always present)
-      "retrieval":         list  — raw top-N hits with snippets
+      "retrieval":         list  - raw top-N hits with snippets
     }
 
 When no LLM provider is configured, the tool degrades to retrieval-only
@@ -23,7 +23,6 @@ import asyncio
 import contextlib
 import hashlib
 import json as _json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -32,6 +31,7 @@ from sqlalchemy import select
 
 from codex_wise.core.persistence.database import get_session
 from codex_wise.core.persistence.models import AnswerCache, Page, WikiSymbol
+from codex_wise.core.providers.llm.config import resolve_llm_provider
 from codex_wise.server.mcp_server._helpers import (
     _get_repo,
     _resolve_repo_context,
@@ -43,7 +43,7 @@ from codex_wise.server.mcp_server._server import mcp
 
 # How many top retrieval hits to enrich with WikiSymbol context. Enriching
 # every hit produces large responses that bloat the cached prompt prefix on
-# multi-turn agent sessions without changing the answer — the agent typically
+# multi-turn agent sessions without changing the answer - the agent typically
 # cites the top-1 file. Top-2 captures the primary navigation need with a
 # bounded payload.
 _ENRICH_TOP_N_HITS = 2
@@ -56,7 +56,7 @@ _MAX_SYMBOLS_PER_HIT = 4
 # When a retrieved file contains symbols whose name matches an identifier
 # from the question, we promote those to the top of the symbol list for that
 # file, pass a longer docstring, and attach a source excerpt so the LLM
-# actually sees the method body — not just a stub docstring. Without this,
+# actually sees the method body - not just a stub docstring. Without this,
 # specific-method questions get hedged answers even on dominant retrievals.
 _MATCHED_SYMBOL_DOC_CHARS = 400
 _MATCHED_SYMBOL_SOURCE_LINES = 40
@@ -66,7 +66,7 @@ _MATCHED_SYMBOL_SOURCE_LINES = 40
 # top-level functions, then methods (which usually only matter once the
 # class context is established).
 _KIND_PRIORITY = {"class": 0, "interface": 0, "function": 1, "method": 2}
-# Per-symbol docstring truncation. Keeps the context block bounded — the
+# Per-symbol docstring truncation. Keeps the context block bounded - the
 # first sentence is typically sufficient and trailing prose mostly contributes
 # cache-write cost on follow-up turns.
 _MAX_SYMBOL_DOC_CHARS = 120
@@ -83,7 +83,7 @@ _COVERAGE_THRESHOLD = 0.66
 
 # Hedge-phrase markers that indicate the LLM refused to synthesize even though
 # retrieval was dominant. When the answer contains any of these, we downgrade
-# confidence to "low" and drop the retrieval payload — the hits aren't useful
+# confidence to "low" and drop the retrieval payload - the hits aren't useful
 # to a consumer that has already been told to go read the source, and letting
 # them ride through the conversation cache inflates multi-turn cost.
 _HEDGE_MARKERS = (
@@ -120,7 +120,7 @@ def _extract_question_identifiers(question: str) -> set[str]:
     Targets: snake_case (``_local_reachability_density``), CamelCase
     (``NearestCentroid``), dotted paths (``BaseLabelPropagation.fit``).
     Filtered to ≥3 chars, non-stopwords, non-pure-lowercase-English (unless
-    they contain an underscore or a digit — otherwise every common word
+    they contain an underscore or a digit - otherwise every common word
     matches). The result drives question-aware symbol promotion in
     ``_hydrate_symbols_for_hits``.
     """
@@ -132,7 +132,7 @@ def _extract_question_identifiers(question: str) -> set[str]:
     for tok in re.findall(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*", question):
         # Split dotted paths into both the full thing and the leaf.
         parts = tok.split(".")
-        candidates = [tok] + parts
+        candidates = [tok, *parts]
         for c in candidates:
             if len(c) < 3:
                 continue
@@ -142,7 +142,7 @@ def _extract_question_identifiers(question: str) -> set[str]:
             # (covers CamelCase and sentence-initial capitalised nouns like
             # ``Version`` that are typically class names in Python), a
             # digit, or an underscore. Pure-lowercase English words like
-            # ``method`` / ``class`` / ``dtype`` are dropped — they are
+            # ``method`` / ``class`` / ``dtype`` are dropped - they are
             # poor promotion signals and match too broadly.
             has_upper = any(ch.isupper() for ch in c)
             has_under = "_" in c
@@ -191,7 +191,7 @@ def _answer_is_hedged(answer_text: str) -> bool:
     """True when the synthesized answer confesses it can't answer.
 
     Retrieval dominance alone doesn't tell you whether the LLM produced a
-    usable answer — the underlying model happily admits insufficiency even
+    usable answer - the underlying model happily admits insufficiency even
     on a top-scoring hit. Treat an admitted non-answer as low confidence,
     regardless of how dominant retrieval was.
     """
@@ -212,10 +212,10 @@ _GATED_RETURN_HITS = 3
 # Intersection-retrieval connectives. If a question contains any of these
 # (case-insensitive whole-word), it's likely a relational/multi-entity
 # question. We split the question on the connective, run two FTS passes,
-# and boost any page that appears in BOTH result sets — the page at the
+# and boost any page that appears in BOTH result sets - the page at the
 # intersection is much more likely to be the actual answer than a page
 # at the top of either single-side query.
-# This is grammar, not domain — the same list applies to any English-language
+# This is grammar, not domain - the same list applies to any English-language
 # code question, independent of the repository or codebase.
 _RELATIONAL_CONNECTIVES = (
     " between ", " from ", " across ", " through ", " with ",
@@ -229,7 +229,7 @@ _RELATIONAL_CONNECTIVES = (
 # of their raw BM25 (vs 1.0 for a hit covering 3/3). Conjunctive coverage
 # becomes a tie-breaker rather than a hard filter.
 _COVERAGE_FLOOR = 0.5
-# English stopwords — minimal list, just enough to keep "what is the" from
+# English stopwords - minimal list, just enough to keep "what is the" from
 # dominating coverage. Not language-specific, not repo-specific.
 _STOPWORDS = frozenset({
     "a","an","the","is","are","was","were","be","been","being","of","to","in",
@@ -256,16 +256,16 @@ _log = __import__("logging").getLogger("codex_wise.mcp.answer")
 
 _SYSTEM_PROMPT = (
     "You are a code-aware retrieval assistant. You are given a developer "
-    "question plus excerpts from a project wiki — file summaries, symbol "
+    "question plus excerpts from a project wiki - file summaries, symbol "
     "signatures with docstrings, and (for symbols whose name matches the "
     "question) the actual source body. Answer thoroughly and concretely, "
     "citing source files by relative path inline like (path/to/file.py) "
     "and line numbers when you have them. Prefer a structured answer "
     "(headings / bullets / short code block citing the symbol) over a "
     "paragraph when the question asks about mechanism or architecture. "
-    "Aim for 150–400 words — enough to cover the asked aspects without "
+    "Aim for 150-400 words - enough to cover the asked aspects without "
     "padding. If a [question-match] symbol's source body is provided, "
-    "you have enough material to answer — ground in that body. Only "
+    "you have enough material to answer - ground in that body. Only "
     "hedge (say 'inspect the source' / 'the excerpts do not contain…') "
     "when there is genuinely no relevant signature, docstring, or source "
     "body in the excerpts. Never invent file paths."
@@ -278,105 +278,12 @@ Project wiki excerpts (top {n} retrieval hits):
 
 {context}
 
-Answer thoroughly (150–400 words). Cite file paths inline and line
+Answer thoroughly (150-400 words). Cite file paths inline and line
 numbers when the excerpt provides them. Prefer a structured layout
 (headings, bullets, short code block from the source body) on
 mechanism / architecture questions. Only hedge if no signature,
 docstring, or source body in the excerpts is relevant.
 """
-
-
-def _resolve_provider_for_answer():
-    """Best-effort provider lookup mirroring cli/helpers.resolve_provider.
-
-    Avoids the click dependency from the cli package. Returns a BaseProvider
-    or None if no API key / provider is configured.
-    """
-    try:
-        from codex_wise.core.providers.llm.registry import get_provider
-    except Exception:
-        _log.debug("Provider registry import failed", exc_info=True)
-        return None
-
-    name = os.environ.get("CODEX_WISE_PROVIDER")
-    model = os.environ.get("CODEX_WISE_DOC_MODEL") or os.environ.get("CODEX_WISE_MODEL")
-
-    def _try(provider_name: str, **kwargs: Any):
-        try:
-            return get_provider(provider_name, **kwargs)
-        except Exception:
-            _log.debug("get_provider(%s) failed", provider_name, exc_info=True)
-            return None
-
-    def _resolve_base_url(provider_name: str) -> str | None:
-        mapping = {
-            "openai": ["OPENAI_BASE_URL"],
-            "anthropic": ["ANTHROPIC_BASE_URL"],
-            "gemini": ["GEMINI_BASE_URL"],
-            "ollama": ["OLLAMA_BASE_URL"],
-            "litellm": ["LITELLM_BASE_URL", "LITELLM_API_BASE"],
-        }
-        for env_var in mapping.get(provider_name, []):
-            val = os.environ.get(env_var)
-            if val:
-                return val
-        return None
-
-    # Explicit selection wins.
-    if name:
-        kw: dict[str, Any] = {}
-        if model:
-            kw["model"] = model
-        if name == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
-            kw["api_key"] = os.environ["ANTHROPIC_API_KEY"]
-        elif name == "openai" and os.environ.get("OPENAI_API_KEY"):
-            kw["api_key"] = os.environ["OPENAI_API_KEY"]
-        elif name == "gemini" and (
-            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        ):
-            kw["api_key"] = os.environ.get("GEMINI_API_KEY") or os.environ.get(
-                "GOOGLE_API_KEY"
-            )
-        base_url = _resolve_base_url(name)
-        if base_url:
-            kw["base_url"] = base_url
-        return _try(name, **kw)
-
-    # Auto-detect from API keys.
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        kw = {"api_key": os.environ["ANTHROPIC_API_KEY"]}
-        if model:
-            kw["model"] = model
-        base_url = _resolve_base_url("anthropic")
-        if base_url:
-            kw["base_url"] = base_url
-        return _try("anthropic", **kw)
-    if os.environ.get("OPENAI_API_KEY"):
-        kw = {"api_key": os.environ["OPENAI_API_KEY"]}
-        if model:
-            kw["model"] = model
-        base_url = _resolve_base_url("openai")
-        if base_url:
-            kw["base_url"] = base_url
-        return _try("openai", **kw)
-    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-        kw = {
-            "api_key": os.environ.get("GEMINI_API_KEY")
-            or os.environ.get("GOOGLE_API_KEY")
-        }
-        if model:
-            kw["model"] = model
-        base_url = _resolve_base_url("gemini")
-        if base_url:
-            kw["base_url"] = base_url
-        return _try("gemini", **kw)
-    if os.environ.get("OLLAMA_BASE_URL"):
-        kw = {"base_url": os.environ["OLLAMA_BASE_URL"]}
-        if model:
-            kw["model"] = model
-        return _try("ollama", **kw)
-    return None
-
 
 def _build_context_block(hits: list[dict], max_chars_per_hit: int = 800) -> str:
     """Format retrieval hits as a compact text block for the LLM.
@@ -433,7 +340,7 @@ def _read_signature_from_source(
       * decorators (one line above the def)
       * full type annotations across line continuations
 
-    None on any failure — caller falls back to the stored signature.
+    None on any failure - caller falls back to the stored signature.
     """
     if repo_root is None:
         return None
@@ -550,7 +457,7 @@ async def _hydrate_symbols_for_hits(
         by_file.setdefault(row.file_path, []).append(entry)
 
     # Sort: matched symbols first (document order within the match group),
-    # then unmatched in start_line order. Cap per file — top hit gets more
+    # then unmatched in start_line order. Cap per file - top hit gets more
     # slots than secondary hits.
     for i, h in enumerate(hits):
         path = h.get("target_path")
@@ -578,7 +485,7 @@ def _split_relational(question: str) -> list[str] | None:
     'between'), split it into two sub-queries on the FIRST matching
     connective. Returns [left, right] or None if not relational.
 
-    Heuristic only — works on English grammar, not on code or repo terms.
+    Heuristic only - works on English grammar, not on code or repo terms.
     """
     q = " " + question.strip() + " "
     qlow = q.lower()
@@ -620,7 +527,7 @@ async def _intersection_boost(question: str, hits: list[dict], ctx: Any = None) 
     intersection = sub_hit_ids[0] & sub_hit_ids[1]
     if not intersection:
         return
-    # 2× boost for hits at the intersection — strong enough to overtake
+    # 2x boost for hits at the intersection - strong enough to overtake
     # a single-side top hit, not so strong that it ignores BM25 entirely.
     for h in hits:
         if h.get("page_id") in intersection:
@@ -632,7 +539,7 @@ async def _intersection_boost(question: str, hits: list[dict], ctx: Any = None) 
 async def _enrich_gated_excerpts(hits: list[dict], ctx: Any = None) -> None:
     """For the gated (low-confidence) return path, fetch real page content
     for top hits so the agent has substantive raw material instead of
-    one-line summaries. Mutates `hits` in place — adds an `excerpt` field.
+    one-line summaries. Mutates `hits` in place - adds an `excerpt` field.
 
     Universal motivation: thin retrieval output forces consumers to fall
     back on priors instead of grounding in source. Symmetric with the
@@ -676,7 +583,7 @@ def _rerank_by_coverage(hits: list[dict], question: str) -> list[dict]:
 
     This addresses a common BM25 failure mode where a hit that matches one
     constraint very strongly can outrank a hit that matches all constraints
-    moderately — the latter is usually the better answer for multi-constraint
+    moderately - the latter is usually the better answer for multi-constraint
     questions.
     """
     terms = set(_question_terms(question))
@@ -689,7 +596,7 @@ def _rerank_by_coverage(hits: list[dict], question: str) -> list[dict]:
             h.get("snippet", "") or "",
             h.get("summary", "") or "",
         ]).lower()
-        # Count distinct terms present (substring match — FTS5 already handles
+        # Count distinct terms present (substring match - FTS5 already handles
         # stemming upstream, so we keep this simple).
         present = sum(1 for t in terms if t in haystack)
         coverage = present / n_terms
@@ -740,19 +647,41 @@ async def get_answer(
         repository = await _get_repo(session)
         repo_id = repository.id
 
+    provider_resolution = resolve_llm_provider()
+    provider = provider_resolution.provider
+    provider_name = provider_resolution.provider_name or (
+        getattr(provider, "provider_name", None) if provider is not None else None
+    )
+    model_name = provider_resolution.model_name or (
+        getattr(provider, "model_name", None) if provider is not None else None
+    )
+    llm_meta = {
+        k: v
+        for k, v in {
+            "llm_provider": provider_name,
+            "llm_model": model_name,
+            "llm_error": provider_resolution.error,
+        }.items()
+        if v
+    }
+
     # --- Cache lookup --------------------------------------------------------
-    # Scope: ignore the (rare) `scope` argument in the cache key for now;
-    # scoped queries are uncommon and including scope would balloon hit rate
-    # variance. We hash on (repo_id, normalized_question) only.
-    qhash = _hash_question(question)
-    async with get_session(ctx.session_factory) as session:
-        res = await session.execute(
-            select(AnswerCache).where(
-                AnswerCache.repository_id == repo_id,
-                AnswerCache.question_hash == qhash,
+    # Scope the cache to synthesis-affecting inputs. A no-provider retrieval
+    # response is not cached here because it is not a synthesized answer.
+    cache_basis = question if not scope else f"{question}\n\nscope:{scope}"
+    qhash = _hash_question(cache_basis)
+    cached = None
+    if provider is not None and provider_name and model_name:
+        async with get_session(ctx.session_factory) as session:
+            res = await session.execute(
+                select(AnswerCache).where(
+                    AnswerCache.repository_id == repo_id,
+                    AnswerCache.question_hash == qhash,
+                    AnswerCache.provider_name == provider_name,
+                    AnswerCache.model_name == model_name,
+                )
             )
-        )
-        cached = res.scalar_one_or_none()
+            cached = res.scalar_one_or_none()
     if cached is not None:
         with contextlib.suppress(Exception):
             payload = _json.loads(cached.payload_json)
@@ -766,6 +695,7 @@ async def get_answer(
                 payload["_meta"] = _build_meta(
                     timing_ms=(time.perf_counter() - t0) * 1000,
                     cached=True,
+                    extra=llm_meta,
                     hint=_answer_hint(
                         payload.get("confidence", "low"),
                         len(payload.get("retrieval", [])),
@@ -824,7 +754,7 @@ async def get_answer(
     # Term-coverage re-rank before the cap so conjunctive matches survive.
     hits = _rerank_by_coverage(hits, question)
     # Intersection-retrieval boost for relational questions (multi-entity).
-    # Pages at the intersection of two split-FTS halves get a 2× bonus.
+    # Pages at the intersection of two split-FTS halves get a 2x bonus.
     with contextlib.suppress(Exception):
         await _intersection_boost(question, hits, ctx)
     # Always cap retrieval hits at 5 for the response payload.
@@ -832,7 +762,7 @@ async def get_answer(
 
     # Enrich each file_page hit with its top-N WikiSymbol rows. Question-
     # aware: identifiers extracted from the question promote matching
-    # symbols and attach a source-body excerpt — the difference between a
+    # symbols and attach a source-body excerpt - the difference between a
     # hedged answer on a specific-method question and a grounded one.
     question_ids = _extract_question_identifiers(question)
     if hits:
@@ -874,14 +804,14 @@ async def get_answer(
     # available via the re-ranker and is used to bias score-based ranking,
     # but is intentionally NOT used as a hard gate here. Natural-language
     # questions rarely have all their content terms co-occurring in a single
-    # page (typical coverage is 0.15–0.25), so a coverage threshold over-
+    # page (typical coverage is 0.15-0.25), so a coverage threshold over-
     # fires on confidently-dominant retrievals and degrades the cheap path.
     if len(hits) >= 2:
         top_score = hits[0].get("score", 0.0)
         second_score = hits[1].get("score", 0.0) or 1e-9
 
         # Two-tier gating: at high retrieval quality (both scores
-        # excellent), close ratios are expected and normal — use an
+        # excellent), close ratios are expected and normal - use an
         # absolute gap instead.  At lower quality, the ratio-based
         # gate prevents synthesis on genuinely ambiguous retrievals.
         if top_score >= 3.0:
@@ -900,7 +830,7 @@ async def get_answer(
                 "fallback_targets": fallback_targets,
                 "retrieval": hits[:_GATED_RETURN_HITS],
                 "note": (
-                    "Multiple plausible candidates — synthesis skipped to "
+                    "Multiple plausible candidates - synthesis skipped to "
                     "avoid anchoring on a wrong frame. Each retrieval entry "
                     "includes an excerpt from the page; read them and pick "
                     "the one that actually answers the question."
@@ -921,22 +851,35 @@ async def get_answer(
     # own reasoning loop.
 
     # --- Synthesis (LLM) ---------------------------------------------------
-    provider = _resolve_provider_for_answer()
     if provider is None:
         # Retrieval-only mode (no provider). Return the hits so the agent can
         # at least skip the search_codebase step.
+        if provider_resolution.error:
+            note = (
+                f"LLM provider unavailable ({provider_resolution.error}). "
+                "In Codex, set CODEX_WISE_PROVIDER=codex_app and "
+                "CODEX_WISE_CODEX_TRANSPORT=proxy; outside Codex, set "
+                "CODEX_WISE_PROVIDER plus the matching provider API key. "
+                "Returning retrieval hits only - Read the listed files to answer."
+            )
+        else:
+            note = (
+                "No LLM provider configured. In Codex, set "
+                "CODEX_WISE_PROVIDER=codex_app and CODEX_WISE_CODEX_TRANSPORT=proxy "
+                "to use the Codex app-server; outside Codex, set CODEX_WISE_PROVIDER "
+                "plus the matching provider API key. Returning retrieval hits only "
+                "- Read the listed files to answer."
+            )
         return {
             "answer": "",
             "citations": [],
             "confidence": "low",
             "fallback_targets": fallback_targets,
             "retrieval": hits,
-            "note": (
-                "No LLM provider configured (set CODEX_WISE_PROVIDER + API key). "
-                "Returning retrieval hits only — Read the listed files to answer."
-            ),
+            "note": note,
             "_meta": _build_meta(
                 timing_ms=(time.perf_counter() - t0) * 1000,
+                extra=llm_meta,
                 hint=_answer_hint("low", len(hits)),
             ),
         }
@@ -949,6 +892,7 @@ async def get_answer(
 
     answer_text = ""
     try:
+        synthesis_timeout = 65.0 if provider_name == "codex_app" else 30.0
         response = await asyncio.wait_for(
             provider.generate(
                 system_prompt=_SYSTEM_PROMPT,
@@ -956,20 +900,32 @@ async def get_answer(
                 max_tokens=1024,
                 temperature=0.2,
             ),
-            timeout=30.0,
+            timeout=synthesis_timeout,
         )
         answer_text = (response.content or "").strip()
     except Exception as exc:
         _log.warning("get_answer LLM call failed: %s", exc)
+        if provider_name == "codex_app":
+            note = (
+                f"Codex app-server synthesis failed ({type(exc).__name__}: {exc}). "
+                "Returning retrieval hits only. Confirm Codex Desktop/app-server "
+                "is running and CODEX_WISE_CODEX_TRANSPORT=proxy is set."
+            )
+        else:
+            note = (
+                f"LLM synthesis failed ({type(exc).__name__}). "
+                "Read the listed files to answer."
+            )
         return {
             "answer": "",
             "citations": [],
             "confidence": "low",
             "fallback_targets": fallback_targets,
             "retrieval": hits,
-            "note": f"LLM synthesis failed ({type(exc).__name__}). Read the listed files to answer.",
+            "note": note,
             "_meta": _build_meta(
                 timing_ms=(time.perf_counter() - t0) * 1000,
+                extra={**llm_meta, "llm_error": str(exc)},
                 hint=_answer_hint("low", len(hits)),
             ),
         }
@@ -990,10 +946,7 @@ async def get_answer(
         _ratio = _top / _second
     else:
         _ratio = float("inf") if hits else 0.0
-    if _ratio >= _DOMINANCE_RATIO:
-        confidence = "high"
-    else:
-        confidence = "medium"
+    confidence = "high" if _ratio >= _DOMINANCE_RATIO else "medium"
 
     # Second gate: downgrade when the LLM's own answer admits insufficiency.
     # Retrieval dominance only tells us we indexed the right file; it does
@@ -1004,13 +957,13 @@ async def get_answer(
     if hedged:
         confidence = "low"
 
-    # Third gate — identifier-citation gate: when the question explicitly
+    # Third gate - identifier-citation gate: when the question explicitly
     # names identifiers (classes / methods / snake_case / CamelCase) and
     # NONE of the top retrieval hits contain any of those identifiers as a
     # hydrated symbol, retrieval may be pointing at plausible-but-wrong
     # files (same module family, similar vocabulary). Downgrade high→medium
     # so the consumer Reads the `fallback_targets`. Only applies when the
-    # question actually names identifiers — mechanism-descriptive questions
+    # question actually names identifiers - mechanism-descriptive questions
     # (no symbol names) are unaffected.
     if confidence == "high" and question_ids:
         top_n = [h for h in hits[:_ENRICH_TOP_N_HITS] if h.get("symbols")]
@@ -1022,7 +975,7 @@ async def get_answer(
 
     if hedged:
         # Hedged answers: drop the retrieval payload. The consumer has been
-        # told to read the source — the symbol-docstring blob that helped
+        # told to read the source - the symbol-docstring blob that helped
         # synthesis doesn't help them, and keeping it in the response bloats
         # every follow-up turn's prompt cache.
         payload = {
@@ -1062,14 +1015,15 @@ async def get_answer(
                     question_hash=qhash,
                     question=question.strip(),
                     payload_json=_json.dumps(payload),
-                    provider_name=getattr(provider, "provider_name", "") or "",
-                    model_name=getattr(provider, "model_name", "") or "",
+                    provider_name=provider_name or "",
+                    model_name=model_name or "",
                 )
                 session.add(row)
                 await session.commit()
 
     payload["_meta"] = _build_meta(
         timing_ms=(time.perf_counter() - t0) * 1000,
+        extra=llm_meta,
         hint=_answer_hint(confidence, len(hits)),
     )
     return payload
