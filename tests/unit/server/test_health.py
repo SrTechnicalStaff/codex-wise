@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from repowise.server import __version__
+from codex_wise.server import __version__
 
 
 @pytest.mark.asyncio
@@ -23,6 +23,6 @@ async def test_metrics_returns_prometheus_format(client: AsyncClient) -> None:
     resp = await client.get("/metrics")
     assert resp.status_code == 200
     text = resp.text
-    assert "repowise_pages_total" in text
-    assert "repowise_jobs_total" in text
-    assert "repowise_tokens_total" in text
+    assert "codex_wise_pages_total" in text
+    assert "codex_wise_jobs_total" in text
+    assert "codex_wise_tokens_total" in text

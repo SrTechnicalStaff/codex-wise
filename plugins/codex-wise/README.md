@@ -1,13 +1,29 @@
 # Codex Wise Plugin
 
-This plugin wires Codex Wise into Codex as an MCP context provider. Codex remains the host agent; Codex Wise supplies indexed repository context through tools and generated `AGENTS.md`.
+This plugin wires Codex Wise into Codex through a local MCP server and agent skills.
 
-Install the CLI in the same environment Codex uses:
+## What It Provides
 
-```bash
-pip install -e .
-codex-wise init --index-only
+- MCP server configuration for `codex-wise mcp --transport stdio`
+- Skills that prefer Codex Wise context for codebase exploration, risk checks, decisions, and dead-code cleanup
+- Operational skills for `init`, `doctor`, `status`, `update`, `watch`, `hook`, `reindex`, `search`, `export`, `serve`, `mcp`, `workspace`, `costs`, `augment`, `dead-code`, `decision`, and `generate-agents-md`
+- Repo-local marketplace metadata in `.agents/plugins/marketplace.json`
+
+## Local Development
+
+Install the Codex Wise CLI in the environment where Codex launches tools:
+
+```shell
+uv tool install --editable .
+```
+
+Initialize any target repository before relying on the MCP tools:
+
+```shell
+codex-wise init
 codex-wise doctor
 ```
 
-For project-scoped setup, prefer the generated `.codex/config.toml` from `codex-wise init`.
+The generated MCP configuration intentionally omits a fixed repository path so Codex Wise can resolve the current project when the plugin is used.
+
+Keep the plugin manifest version aligned with the packaged `codex-wise` runtime version when cutting a release.

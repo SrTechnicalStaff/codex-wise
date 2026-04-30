@@ -1,4 +1,4 @@
-"""Tests for repowise.core.workspace.cross_repo — cross-repo intelligence."""
+"""Tests for codex_wise.core.workspace.cross_repo — cross-repo intelligence."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from repowise.core.workspace.cross_repo import (
+from codex_wise.core.workspace.cross_repo import (
     CROSS_REPO_EDGES_FILENAME,
     CrossRepoCoChange,
     CrossRepoOverlay,
@@ -99,7 +99,7 @@ class TestCrossRepoCoChanges:
                     return repo_commits[alias]
             return []
 
-        with patch("repowise.core.workspace.cross_repo._parse_git_log", side_effect=fake_parse):
+        with patch("codex_wise.core.workspace.cross_repo._parse_git_log", side_effect=fake_parse):
             return detect_cross_repo_co_changes(repo_paths, **kwargs)
 
     def test_same_author_within_window(self) -> None:
@@ -314,7 +314,7 @@ class TestOverlayPersistence:
         assert load_overlay(tmp_path) is None
 
     def test_load_corrupt_json_returns_none(self, tmp_path: Path) -> None:
-        data_dir = tmp_path / ".repowise-workspace"
+        data_dir = tmp_path / ".codex-wise-workspace"
         data_dir.mkdir()
         (data_dir / CROSS_REPO_EDGES_FILENAME).write_text("not json!!!")
         assert load_overlay(tmp_path) is None
@@ -323,4 +323,4 @@ class TestOverlayPersistence:
         overlay = CrossRepoOverlay()
         path = save_overlay(overlay, tmp_path)
         assert path.is_file()
-        assert (tmp_path / ".repowise-workspace").is_dir()
+        assert (tmp_path / ".codex-wise-workspace").is_dir()

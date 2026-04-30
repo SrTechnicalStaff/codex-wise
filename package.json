@@ -2,7 +2,7 @@
   "name": "codex-wise-root",
   "version": "0.1.0",
   "private": true,
-  "description": "Root workspace configuration for Codex Wise monorepo",
+  "description": "Root workspace configuration for the Codex Wise apparatus",
   "workspaces": [
     "packages/web"
   ],

@@ -1,3 +1,3 @@
-module github.com/repowise-ai/sample
+module github.com/codex-wise/sample
 
 go 1.21

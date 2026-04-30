@@ -11,7 +11,7 @@ from datetime import UTC
 
 import pytest
 
-from repowise.core.persistence.crud import (
+from codex_wise.core.persistence.crud import (
     batch_upsert_graph_edges,
     batch_upsert_graph_nodes,
     batch_upsert_symbols,
@@ -321,7 +321,7 @@ async def test_get_stale_pages_returns_only_stale(async_session):
 async def test_batch_upsert_graph_nodes_inserts(async_session):
     from sqlalchemy import select
 
-    from repowise.core.persistence.models import GraphNode
+    from codex_wise.core.persistence.models import GraphNode
 
     repo = await insert_repo(async_session)
     nodes = [
@@ -341,7 +341,7 @@ async def test_batch_upsert_graph_nodes_inserts(async_session):
 async def test_batch_upsert_graph_nodes_updates_existing(async_session):
     from sqlalchemy import select
 
-    from repowise.core.persistence.models import GraphNode
+    from codex_wise.core.persistence.models import GraphNode
 
     repo = await insert_repo(async_session)
     await batch_upsert_graph_nodes(
@@ -365,7 +365,7 @@ async def test_batch_upsert_graph_nodes_updates_existing(async_session):
 async def test_batch_upsert_graph_edges_inserts(async_session):
     from sqlalchemy import select
 
-    from repowise.core.persistence.models import GraphEdge
+    from codex_wise.core.persistence.models import GraphEdge
 
     repo = await insert_repo(async_session)
     edges = [
@@ -392,7 +392,7 @@ async def test_batch_upsert_symbols_inserts(async_session):
 
     from sqlalchemy import select
 
-    from repowise.core.persistence.models import WikiSymbol
+    from codex_wise.core.persistence.models import WikiSymbol
 
     @dataclass
     class FakeSym:
@@ -463,7 +463,7 @@ async def test_mark_webhook_processed(async_session):
 
     from sqlalchemy import select
 
-    from repowise.core.persistence.models import WebhookEvent
+    from codex_wise.core.persistence.models import WebhookEvent
 
     result = await async_session.execute(select(WebhookEvent).where(WebhookEvent.id == event.id))
     updated = result.scalar_one()

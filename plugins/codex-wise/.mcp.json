@@ -1,15 +1,19 @@
 {
   "mcpServers": {
-    "codex-wise": {
+    "codex_wise": {
       "command": "codex-wise",
-      "args": ["mcp", "--transport", "stdio"],
+      "args": [
+        "mcp",
+        "--transport",
+        "stdio"
+      ],
       "env": {
         "CODEX_WISE_PROVIDER": "codex_app",
         "CODEX_WISE_CODEX_TRANSPORT": "proxy",
         "CODEX_WISE_DOC_MODEL": "gpt-5.5",
         "CODEX_WISE_CODEX_REASONING_EFFORT": "medium"
       },
-      "description": "Codex Wise: codebase context, graph, git signals, decisions, and opt-in dead-code findings"
+      "description": "Codex Wise: codebase context, graph, git signals, dead code, and decisions"
     }
   }
 }

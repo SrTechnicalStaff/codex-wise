@@ -1,11 +1,11 @@
-"""Unit tests for repowise.cli.cost_estimator."""
+"""Unit tests for codex_wise.cli.cost_estimator."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
-from repowise.cli.cost_estimator import (
+from codex_wise.cli.cost_estimator import (
     PageTypePlan,
     build_generation_plan,
     estimate_cost,
@@ -143,6 +143,12 @@ class TestEstimateCost:
     def test_mock_provider_zero_cost(self):
         plans = [PageTypePlan("file_page", 5, 2)]
         est = estimate_cost(plans, "mock", "mock-model")
+        assert est.estimated_cost_usd == 0.0
+        assert est.total_pages == 5
+
+    def test_codex_provider_zero_usd_cost(self):
+        plans = [PageTypePlan("file_page", 5, 2)]
+        est = estimate_cost(plans, "codex", "gpt-5.5")
         assert est.estimated_cost_usd == 0.0
         assert est.total_pages == 5
 

@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.ingestion import GraphBuilder
-from repowise.core.ingestion.git_indexer import GitIndexer, GitIndexSummary
-from repowise.core.ingestion.models import (
+from codex_wise.core.ingestion import GraphBuilder
+from codex_wise.core.ingestion.git_indexer import GitIndexer, GitIndexSummary
+from codex_wise.core.ingestion.models import (
     FileInfo,
     ParsedFile,
     Symbol,

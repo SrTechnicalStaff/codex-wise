@@ -1,4 +1,4 @@
-"""Tests for repowise.core.workspace.registry — RepoRegistry and RepoContext."""
+"""Tests for codex_wise.core.workspace.registry — RepoRegistry and RepoContext."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.models import Page, Repository
-from repowise.core.workspace.config import RepoEntry, WorkspaceConfig
-from repowise.core.workspace.registry import RepoContext, RepoRegistry
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.models import Page, Repository
+from codex_wise.core.workspace.config import RepoEntry, WorkspaceConfig
+from codex_wise.core.workspace.registry import RepoContext, RepoRegistry
 
 
 # ---------------------------------------------------------------------------
@@ -25,15 +25,15 @@ _NOW = datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC)
 
 
 def _make_workspace(tmp_path: Path, repo_names: list[str], default: str | None = None) -> WorkspaceConfig:
-    """Create repo dirs with .repowise/wiki.db and return a WorkspaceConfig."""
+    """Create repo dirs with .codex-wise/wiki.db and return a WorkspaceConfig."""
     entries = []
     for name in repo_names:
         repo_dir = tmp_path / name
         repo_dir.mkdir(parents=True, exist_ok=True)
-        repowise_dir = repo_dir / ".repowise"
-        repowise_dir.mkdir(exist_ok=True)
+        codex_wise_dir = repo_dir / ".codex-wise"
+        codex_wise_dir.mkdir(exist_ok=True)
         # Create an empty wiki.db — init_db will create tables on first access
-        (repowise_dir / "wiki.db").write_bytes(b"")
+        (codex_wise_dir / "wiki.db").write_bytes(b"")
         entries.append(RepoEntry(path=name, alias=name))
 
     if entries and not default:
@@ -51,7 +51,7 @@ def _make_workspace(tmp_path: Path, repo_names: list[str], default: str | None =
 
 async def _seed_repo_db(repo_path: Path, repo_name: str) -> None:
     """Seed a repo's wiki.db with minimal data for testing."""
-    db_path = repo_path / ".repowise" / "wiki.db"
+    db_path = repo_path / ".codex-wise" / "wiki.db"
     url = f"sqlite+aiosqlite:///{db_path.as_posix()}"
     engine = create_async_engine(
         url,

@@ -11,8 +11,8 @@ import pytest
 
 pytest.importorskip("openai", reason="openai SDK not installed")
 
-from repowise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
-from repowise.core.providers.llm.openrouter import OpenRouterProvider
+from codex_wise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
+from codex_wise.core.providers.llm.openrouter import OpenRouterProvider
 
 # ---------------------------------------------------------------------------
 # Construction
@@ -47,10 +47,10 @@ def test_custom_model():
 
 
 def test_default_headers_app_title():
-    """Default app_title='repowise' sets X-Title header."""
+    """Default app_title='Codex Wise' sets X-Title header."""
     p = OpenRouterProvider(api_key="sk-or-test")
     headers = p._client._custom_headers
-    assert headers.get("X-Title") == "repowise"
+    assert headers.get("X-Title") == "Codex Wise"
 
 
 def test_default_headers_with_referer():
@@ -58,7 +58,7 @@ def test_default_headers_with_referer():
     p = OpenRouterProvider(api_key="sk-or-test", http_referer="https://example.com")
     headers = p._client._custom_headers
     assert headers.get("HTTP-Referer") == "https://example.com"
-    assert headers.get("X-Title") == "repowise"
+    assert headers.get("X-Title") == "Codex Wise"
 
 
 def test_no_headers_when_empty():
@@ -71,7 +71,7 @@ def test_no_headers_when_empty():
 
 def test_accepts_cost_tracker_kwarg():
     """cost_tracker is accepted for registry parity but ignored (OpenRouter proxies
-    200+ models with varying prices; repowise's fallback pricing would be misleading)."""
+    200+ models with varying prices; Codex Wise's fallback pricing would be misleading)."""
     sentinel = object()
     p = OpenRouterProvider(api_key="sk-or-test", cost_tracker=sentinel)
     assert p.provider_name == "openrouter"

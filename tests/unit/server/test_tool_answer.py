@@ -10,11 +10,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.models import AnswerCache, Page, Repository
-from repowise.core.persistence.search import SearchResult
-from repowise.core.providers.llm.base import BaseProvider, GeneratedResponse
-from repowise.core.providers.llm.config import ProviderResolution
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.models import AnswerCache, Page, Repository
+from codex_wise.core.persistence.search import SearchResult
+from codex_wise.core.providers.llm.base import BaseProvider, GeneratedResponse
+from codex_wise.core.providers.llm.config import ProviderResolution
 
 _NOW = datetime(2026, 4, 30, 12, 0, 0, tzinfo=UTC)
 
@@ -136,7 +136,7 @@ async def repo_with_page(factory, tmp_path: Path) -> str:
 
 @pytest.fixture
 async def setup_mcp(monkeypatch: pytest.MonkeyPatch, factory, repo_with_page, tmp_path: Path):
-    import repowise.server.mcp_server as mcp_mod
+    import codex_wise.server.mcp_server as mcp_mod
 
     monkeypatch.setattr(mcp_mod, "_session_factory", factory)
     monkeypatch.setattr(mcp_mod, "_fts", FakeFts())
@@ -152,10 +152,10 @@ async def test_get_answer_retrieval_only_when_no_provider(
     setup_mcp,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from repowise.server.mcp_server import get_answer
+    from codex_wise.server.mcp_server import get_answer
 
     monkeypatch.setattr(
-        "repowise.server.mcp_server.tool_answer.resolve_llm_provider",
+        "codex_wise.server.mcp_server.tool_answer.resolve_llm_provider",
         lambda: ProviderResolution(provider=None),
     )
 
@@ -173,11 +173,11 @@ async def test_get_answer_invokes_codex_app_provider(
     setup_mcp,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from repowise.server.mcp_server import get_answer
+    from codex_wise.server.mcp_server import get_answer
 
     provider = FakeProvider()
     monkeypatch.setattr(
-        "repowise.server.mcp_server.tool_answer.resolve_llm_provider",
+        "codex_wise.server.mcp_server.tool_answer.resolve_llm_provider",
         lambda: ProviderResolution(
             provider=provider,
             provider_name="codex_app",
@@ -201,11 +201,11 @@ async def test_get_answer_codex_app_failure_returns_retrieval_hits(
     setup_mcp,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from repowise.server.mcp_server import get_answer
+    from codex_wise.server.mcp_server import get_answer
 
     provider = FakeProvider(exc=RuntimeError("socket missing"))
     monkeypatch.setattr(
-        "repowise.server.mcp_server.tool_answer.resolve_llm_provider",
+        "codex_wise.server.mcp_server.tool_answer.resolve_llm_provider",
         lambda: ProviderResolution(
             provider=provider,
             provider_name="codex_app",
@@ -228,8 +228,8 @@ async def test_get_answer_cache_is_scoped_by_provider_and_model(
     factory,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from repowise.server.mcp_server import get_answer
-    from repowise.server.mcp_server.tool_answer import _hash_question
+    from codex_wise.server.mcp_server import get_answer
+    from codex_wise.server.mcp_server.tool_answer import _hash_question
 
     question = "How does authentication work?"
     async with factory() as session:
@@ -255,7 +255,7 @@ async def test_get_answer_cache_is_scoped_by_provider_and_model(
 
     provider = FakeProvider("fresh codex answer from src/auth/service.py")
     monkeypatch.setattr(
-        "repowise.server.mcp_server.tool_answer.resolve_llm_provider",
+        "codex_wise.server.mcp_server.tool_answer.resolve_llm_provider",
         lambda: ProviderResolution(
             provider=provider,
             provider_name="codex_app",

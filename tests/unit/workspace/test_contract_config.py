@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from repowise.core.workspace.config import (
+from codex_wise.core.workspace.config import (
     ContractConfig,
     ManualContractLink,
     RepoEntry,

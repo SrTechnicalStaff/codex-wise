@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "repowise": {
-      "command": "repowise",
-      "args": ["mcp"],
-      "env": {}
-    }
-  }
-}

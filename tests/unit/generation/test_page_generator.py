@@ -6,11 +6,11 @@ from datetime import datetime
 
 import pytest
 
-from repowise.core.generation.context_assembler import ContextAssembler
-from repowise.core.generation.models import GeneratedPage, GenerationConfig
-from repowise.core.generation.page_generator import SYSTEM_PROMPTS, PageGenerator
-from repowise.core.ingestion.models import ParsedFile, RepoStructure
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.generation.context_assembler import ContextAssembler
+from codex_wise.core.generation.models import GeneratedPage, GenerationConfig
+from codex_wise.core.generation.page_generator import SYSTEM_PROMPTS, PageGenerator
+from codex_wise.core.ingestion.models import ParsedFile, RepoStructure
+from codex_wise.core.providers.llm.mock import MockProvider
 
 from .conftest import _make_file_info, _make_symbol
 
@@ -248,7 +248,7 @@ async def test_generated_page_created_at_is_iso(
 
 def _make_builder_with(parsed_files):
     """Build a GraphBuilder from a list of ParsedFile objects."""
-    from repowise.core.ingestion.graph import GraphBuilder
+    from codex_wise.core.ingestion.graph import GraphBuilder
 
     builder = GraphBuilder()
     for p in parsed_files:

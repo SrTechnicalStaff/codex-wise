@@ -23,8 +23,8 @@ from __future__ import annotations
 import networkx as nx
 import pytest
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.luau import resolve_luau_import
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.luau import resolve_luau_import
 
 
 def _ctx(paths: set[str]) -> ResolverContext:
@@ -171,7 +171,7 @@ class TestLuaurcAlias:
         declaring ``{"aliases": {"dep": "./dependency"}}``, a require of
         ``@dep`` resolves to ``src/dependency.luau``.
 
-        Counts from running `repowise init` against the upstream
+        Counts from running `codex-wise init` against the upstream
         luau-lang/luau repo: 24 `@alias` requires — every one of them
         currently lands on the external-node fallback.  Implementing this
         needs a ``.luaurc`` reader layered in via

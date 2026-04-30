@@ -11,7 +11,7 @@ import math
 
 import pytest
 
-from repowise.core.providers.embedding.base import Embedder, MockEmbedder
+from codex_wise.core.providers.embedding.base import Embedder, MockEmbedder
 
 # ---------------------------------------------------------------------------
 # MockEmbedder
@@ -214,6 +214,41 @@ async def test_in_memory_store_search_type_is_vector(in_memory_vector_store):
     assert results[0].search_type == "vector"
 
 
+async def test_in_memory_store_uses_provider_specific_query_and_document_embedding():
+    from codex_wise.core.persistence.vector_store import InMemoryVectorStore
+
+    class FormattedEmbedder:
+        dimensions = 2
+
+        def __init__(self):
+            self.documents: list[tuple[str, str | None]] = []
+            self.queries: list[str] = []
+
+        async def embed(self, texts: list[str]) -> list[list[float]]:
+            return [[1.0, 0.0] for _ in texts]
+
+        async def embed_document(self, content: str, title: str | None = None) -> list[float]:
+            self.documents.append((content, title))
+            return [1.0, 0.0]
+
+        async def embed_query(self, query: str) -> list[float]:
+            self.queries.append(query)
+            return [1.0, 0.0]
+
+    embedder = FormattedEmbedder()
+    store = InMemoryVectorStore(embedder)
+
+    await store.embed_and_upsert(
+        "p",
+        "doc text",
+        {"title": "Doc Title", "page_type": "file_page", "target_path": "f.py"},
+    )
+    await store.search("find auth")
+
+    assert embedder.documents == [("doc text", "Doc Title")]
+    assert embedder.queries == ["find auth"]
+
+
 async def test_in_memory_store_close_clears(in_memory_vector_store):
     await in_memory_vector_store.embed_and_upsert(
         "p",
@@ -232,7 +267,7 @@ async def test_in_memory_store_close_clears(in_memory_vector_store):
 @pytest.mark.asyncio
 async def test_lancedb_vector_store_basic(tmp_path, mock_embedder):
     lancedb = pytest.importorskip("lancedb")  # noqa: F841
-    from repowise.core.persistence.vector_store import LanceDBVectorStore
+    from codex_wise.core.persistence.vector_store import LanceDBVectorStore
 
     store = LanceDBVectorStore(str(tmp_path / "lance"), mock_embedder)
     try:

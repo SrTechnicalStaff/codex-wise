@@ -1,4 +1,4 @@
-"""Tests for repowise.core.workspace.update — staleness and update orchestration."""
+"""Tests for codex_wise.core.workspace.update — staleness and update orchestration."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from repowise.core.workspace.config import RepoEntry, WorkspaceConfig
-from repowise.core.workspace.update import (
+from codex_wise.core.workspace.config import RepoEntry, WorkspaceConfig
+from codex_wise.core.workspace.update import (
     RepoUpdateResult,
     check_repo_staleness,
     count_commits_between,
@@ -61,7 +61,7 @@ def _add_commit(repo: Path, filename: str = "change.txt", msg: str = "update") -
 
 def _write_state(repo: Path, commit: str | None) -> None:
     """Write a state.json with the given commit."""
-    state_dir = repo / ".repowise"
+    state_dir = repo / ".codex-wise"
     state_dir.mkdir(parents=True, exist_ok=True)
     state = {}
     if commit:
@@ -195,7 +195,7 @@ class TestUpdateWorkspace:
 
         async def _run():
             with patch(
-                "repowise.core.workspace.update.update_single_repo_index",
+                "codex_wise.core.workspace.update.update_single_repo_index",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ):
@@ -231,7 +231,7 @@ class TestUpdateWorkspace:
 
         async def _run():
             with patch(
-                "repowise.core.workspace.update.update_single_repo_index",
+                "codex_wise.core.workspace.update.update_single_repo_index",
                 new_callable=AsyncMock,
                 return_value=mock_result,
             ):
@@ -256,9 +256,9 @@ class TestUpdateWorkspace:
             asyncio.run(_run())
 
     def test_not_indexed_skipped(self, tmp_path: Path) -> None:
-        """Repos without .repowise/ should be skipped."""
+        """Repos without local storage should be skipped."""
         repo = _make_git_repo(tmp_path, "backend")
-        # No .repowise/ dir, no state.json
+        # No local storage dir, no state.json
 
         ws_config = WorkspaceConfig(
             repos=[RepoEntry(path="backend", alias="backend")],

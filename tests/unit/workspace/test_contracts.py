@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.workspace.contracts import (
+from codex_wise.core.workspace.contracts import (
     CONTRACTS_FILENAME,
     Contract,
     ContractLink,
@@ -17,16 +17,16 @@ from repowise.core.workspace.contracts import (
     normalize_contract_id,
     save_contract_store,
 )
-from repowise.core.workspace.extractors.http_extractor import (
+from codex_wise.core.workspace.extractors.http_extractor import (
     HttpExtractor,
     normalize_http_path,
 )
-from repowise.core.workspace.extractors.grpc_extractor import (
+from codex_wise.core.workspace.extractors.grpc_extractor import (
     GrpcExtractor,
     _extract_service_blocks,
 )
-from repowise.core.workspace.extractors.topic_extractor import TopicExtractor
-from repowise.core.workspace.extractors.service_boundary import (
+from codex_wise.core.workspace.extractors.topic_extractor import TopicExtractor
+from codex_wise.core.workspace.extractors.service_boundary import (
     ServiceBoundary,
     assign_service,
     detect_service_boundaries,
@@ -645,7 +645,7 @@ class TestContractStorePersistence:
         assert load_contract_store(tmp_path) is None
 
     def test_load_corrupt_json_returns_none(self, tmp_path: Path) -> None:
-        data_dir = tmp_path / ".repowise-workspace"
+        data_dir = tmp_path / ".codex-wise-workspace"
         data_dir.mkdir()
         (data_dir / CONTRACTS_FILENAME).write_text("not json!!!")
         assert load_contract_store(tmp_path) is None

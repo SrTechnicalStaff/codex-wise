@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from repowise.server.mcp_server._enrichment import CrossRepoEnricher
+from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
 
 
 def _write_json(path: Path, data: dict) -> None:

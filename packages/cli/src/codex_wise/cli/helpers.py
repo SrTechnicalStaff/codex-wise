@@ -1,0 +1,445 @@
+"""Shared CLI utilities — async bridge, path resolution, state, DB setup."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+from pathlib import Path
+from typing import Any, TypeVar
+
+from rich.console import Console
+
+CONFIG_FILENAME = "config.yaml"
+
+T = TypeVar("T")
+
+console = Console()
+err_console = Console(stderr=True)
+
+STATE_FILENAME = "state.json"
+CODEX_WISE_DIR = ".codex-wise"
+
+
+# ---------------------------------------------------------------------------
+# Async bridge
+# ---------------------------------------------------------------------------
+
+
+def run_async(coro: Any) -> Any:
+    """Run an async coroutine from synchronous Click code."""
+    return asyncio.run(coro)
+
+
+# ---------------------------------------------------------------------------
+# Path resolution
+# ---------------------------------------------------------------------------
+
+
+def resolve_repo_path(path: str | None) -> Path:
+    """Resolve the repository root path from a CLI argument.
+
+    If *path* is ``None``, defaults to the current working directory.
+    Always returns an absolute, resolved ``Path``.
+    """
+    if path is None:
+        return Path.cwd().resolve()
+    return Path(path).resolve()
+
+
+def find_workspace_root(start: Path | None = None) -> Path | None:
+    """Walk up from *start* (default: cwd) looking for a workspace config.
+
+    Returns the directory containing the file, or ``None`` if not found.
+    Delegates to :func:`codex_wise.core.workspace.config.find_workspace_root`.
+    """
+    from codex_wise.core.workspace.config import find_workspace_root as _find
+
+    return _find(start)
+
+
+def get_codex_wise_dir(repo_path: Path) -> Path:
+    """Return the active Codex Wise storage directory for a given repo root."""
+    from codex_wise.core.persistence.database import get_repo_storage_dir
+
+    return get_repo_storage_dir(repo_path)
+
+
+def ensure_codex_wise_dir(repo_path: Path) -> Path:
+    """Create the native Codex Wise storage directory."""
+    from codex_wise.core.persistence.database import ensure_repo_storage_dir
+
+    return ensure_repo_storage_dir(repo_path)
+
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
+
+
+def get_db_url_for_repo(repo_path: Path) -> str:
+    """Return a database URL for this repo.
+
+    Prefers ``CODEX_WISE_DB_URL``.
+    Otherwise defaults to the repo-local wiki database.
+    """
+    from codex_wise.core.persistence.database import resolve_db_url
+
+    return resolve_db_url(repo_path)
+
+
+async def _ensure_db_async(repo_path: Path) -> tuple[Any, Any]:
+    from codex_wise.core.persistence import (
+        create_engine,
+        create_session_factory,
+        init_db,
+    )
+
+    url = get_db_url_for_repo(repo_path)
+    engine = create_engine(url)
+    await init_db(engine)
+    session_factory = create_session_factory(engine)
+    return engine, session_factory
+
+
+def ensure_db(repo_path: Path) -> tuple[Any, Any]:
+    """Create the DB engine, initialise the schema, and return ``(engine, session_factory)``."""
+    return run_async(_ensure_db_async(repo_path))
+
+
+# ---------------------------------------------------------------------------
+# State file
+# ---------------------------------------------------------------------------
+
+
+def load_state(repo_path: Path) -> dict[str, Any]:
+    """Load ``state.json`` from active storage or return an empty dict if absent."""
+    state_path = get_codex_wise_dir(repo_path) / STATE_FILENAME
+    if state_path.exists():
+        return json.loads(state_path.read_text(encoding="utf-8"))
+    return {}
+
+
+def save_state(repo_path: Path, state: dict[str, Any]) -> None:
+    """Write *state* to the active storage directory."""
+    ensure_codex_wise_dir(repo_path)
+    state_path = get_codex_wise_dir(repo_path) / STATE_FILENAME
+    state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Git helpers
+# ---------------------------------------------------------------------------
+
+
+def get_head_commit(repo_path: Path) -> str | None:
+    """Return the HEAD commit SHA or ``None`` if not a git repo."""
+    try:
+        import git as gitpython
+
+        repo = gitpython.Repo(repo_path, search_parent_directories=True)
+        sha = repo.head.commit.hexsha
+        repo.close()
+        return sha
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Config (provider / model / embedder persisted after init)
+# ---------------------------------------------------------------------------
+
+
+def load_config(repo_path: Path) -> dict[str, Any]:
+    """Load ``config.yaml`` from active storage or return an empty dict."""
+    config_path = get_codex_wise_dir(repo_path) / CONFIG_FILENAME
+    if not config_path.exists():
+        return {}
+    text = config_path.read_text(encoding="utf-8")
+    try:
+        import yaml  # type: ignore[import-untyped]
+
+        return yaml.safe_load(text) or {}
+    except ImportError:
+        # Simple line-by-line parser for the flat key: value format we write
+        result: dict[str, Any] = {}
+        for line in text.splitlines():
+            if ":" in line:
+                k, _, v = line.partition(":")
+                result[k.strip()] = v.strip()
+        return result
+
+
+def save_config(
+    repo_path: Path,
+    provider: str,
+    model: str,
+    embedder: str,
+    *,
+    exclude_patterns: list[str] | None = None,
+    commit_limit: int | None = None,
+) -> None:
+    """Write provider/model/embedder to the active storage config.
+
+    Performs a round-trip load so existing keys are preserved.
+    """
+    ensure_codex_wise_dir(repo_path)
+    config_path = get_codex_wise_dir(repo_path) / CONFIG_FILENAME
+
+    # Round-trip: preserve any existing keys (e.g. exclude_patterns set via CLI)
+    existing = load_config(repo_path)
+    existing["provider"] = provider
+    existing["model"] = model
+    existing["embedder"] = embedder
+    if exclude_patterns is not None:
+        existing["exclude_patterns"] = exclude_patterns
+    if commit_limit is not None:
+        existing["commit_limit"] = commit_limit
+
+    try:
+        import yaml  # type: ignore[import-untyped]
+
+        config_path.write_text(
+            yaml.dump(existing, default_flow_style=False, sort_keys=False),
+            encoding="utf-8",
+        )
+    except ImportError:
+        # Fallback: write simple key-value format (lists not supported)
+        lines = [f"provider: {provider}", f"model: {model}", f"embedder: {embedder}"]
+        config_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Provider resolution
+# ---------------------------------------------------------------------------
+
+
+def resolve_provider(
+    provider_name: str | None,
+    model: str | None,
+    repo_path: Path | None = None,
+) -> Any:
+    """Resolve a provider instance from CLI flags or environment variables.
+
+    Resolution order:
+      1. Explicit ``--provider`` flag
+      2. ``CODEX_WISE_PROVIDER`` env var
+      3. active storage ``config.yaml`` (written by ``codex-wise init``)
+      4. Codex app-server (default, no provider API key required)
+      5. Legacy auto-detect from API key env vars
+    """
+    from codex_wise.core.providers import get_provider
+    from codex_wise.core.providers.llm.codex_app_server import is_codex_cli_available
+
+    cfg: dict[str, Any] = {}
+    if repo_path is not None:
+        cfg = load_config(repo_path)
+
+    if provider_name is None:
+        provider_name = os.environ.get("CODEX_WISE_PROVIDER")
+
+    if provider_name is None and cfg.get("provider"):
+        provider_name = cfg["provider"]
+        if model is None and cfg.get("model"):
+            model = cfg["model"]
+
+    def _resolve_base_url(name: str) -> str | None:
+        """Return base_url from env or repo config for the provider."""
+        env_vars = {
+            "anthropic": ["ANTHROPIC_BASE_URL"],
+            "openai": ["OPENAI_BASE_URL"],
+            "gemini": ["GEMINI_BASE_URL"],
+            "ollama": ["OLLAMA_BASE_URL"],
+            "litellm": ["LITELLM_BASE_URL", "LITELLM_API_BASE"],
+        }
+        for var in env_vars.get(name, []):
+            val = os.environ.get(var)
+            if val:
+                return val
+        section = cfg.get(name)
+        if isinstance(section, dict):
+            base_url = section.get("base_url")
+            if base_url:
+                return base_url
+        return None
+
+    def _create_provider(name: str) -> Any:
+        # Validate configuration before attempting to create provider
+        warnings = validate_provider_config(name)
+        if warnings:
+            for warning in warnings:
+                err_console.print(f"[yellow]Warning:[/yellow] {warning}")
+            # For explicit provider requests, we still try to create it
+            # The provider constructor will fail if the API key is actually required
+
+        kwargs: dict[str, Any] = {}
+        if model:
+            kwargs["model"] = model
+        if name in {"codex", "codex_app"} and repo_path is not None:
+            kwargs["cwd"] = str(repo_path)
+        base_url = _resolve_base_url(name)
+        if base_url:
+            kwargs["base_url"] = base_url
+
+        # Pass API key from environment if available
+        if name == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
+            kwargs["api_key"] = os.environ["ANTHROPIC_API_KEY"]
+        elif name == "openai" and os.environ.get("OPENAI_API_KEY"):
+            kwargs["api_key"] = os.environ["OPENAI_API_KEY"]
+        elif name == "gemini" and (
+            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        ):
+            kwargs["api_key"] = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        elif name == "openrouter" and os.environ.get("OPENROUTER_API_KEY"):
+            kwargs["api_key"] = os.environ["OPENROUTER_API_KEY"]
+        elif name == "ollama" and os.environ.get("OLLAMA_BASE_URL"):
+            kwargs["base_url"] = os.environ["OLLAMA_BASE_URL"]
+
+        return get_provider(name, **kwargs)
+
+    if provider_name is not None:
+        return _create_provider(provider_name)
+
+    # Codex is the default integration path. If the CLI is unavailable, keep
+    # legacy API-key autodetection as a compatibility fallback.
+    if is_codex_cli_available():
+        return _create_provider("codex")
+
+    # Auto-detect from env vars
+    if os.environ.get("ANTHROPIC_API_KEY") and os.environ["ANTHROPIC_API_KEY"].strip():
+        kwargs = (
+            {"model": model, "api_key": os.environ["ANTHROPIC_API_KEY"]}
+            if model
+            else {"api_key": os.environ["ANTHROPIC_API_KEY"]}
+        )
+        base_url = _resolve_base_url("anthropic")
+        if base_url:
+            kwargs["base_url"] = base_url
+        return get_provider("anthropic", **kwargs)
+    if os.environ.get("OPENAI_API_KEY") and os.environ["OPENAI_API_KEY"].strip():
+        kwargs = (
+            {"model": model, "api_key": os.environ["OPENAI_API_KEY"]}
+            if model
+            else {"api_key": os.environ["OPENAI_API_KEY"]}
+        )
+        base_url = _resolve_base_url("openai")
+        if base_url:
+            kwargs["base_url"] = base_url
+        return get_provider("openai", **kwargs)
+    if os.environ.get("OPENROUTER_API_KEY") and os.environ["OPENROUTER_API_KEY"].strip():
+        kwargs = (
+            {"model": model, "api_key": os.environ["OPENROUTER_API_KEY"]}
+            if model
+            else {"api_key": os.environ["OPENROUTER_API_KEY"]}
+        )
+        return get_provider("openrouter", **kwargs)
+    if os.environ.get("OLLAMA_BASE_URL") and os.environ["OLLAMA_BASE_URL"].strip():
+        kwargs = (
+            {"model": model, "base_url": os.environ["OLLAMA_BASE_URL"]}
+            if model
+            else {"base_url": os.environ["OLLAMA_BASE_URL"]}
+        )
+        return get_provider("ollama", **kwargs)
+    if (os.environ.get("GEMINI_API_KEY") and os.environ["GEMINI_API_KEY"].strip()) or (
+        os.environ.get("GOOGLE_API_KEY") and os.environ["GOOGLE_API_KEY"].strip()
+    ):
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        kwargs = {"model": model, "api_key": api_key} if model else {"api_key": api_key}
+        base_url = _resolve_base_url("gemini")
+        if base_url:
+            kwargs["base_url"] = base_url
+        return get_provider("gemini", **kwargs)
+
+    return _create_provider("codex")
+
+
+# ---------------------------------------------------------------------------
+# Provider validation
+# ---------------------------------------------------------------------------
+
+
+def validate_provider_config(provider_name: str | None = None) -> list[str]:
+    """Validate that required API keys/environment variables are set for the provider.
+
+    Args:
+        provider_name: The provider name to validate. If None, checks all possible providers.
+
+    Returns:
+        List of warning messages for missing or invalid configuration.
+        Empty list means all required config is present.
+    """
+    warnings = []
+
+    def _is_env_var_set(var_name: str) -> bool:
+        """Check if environment variable is set and non-empty."""
+        value = os.environ.get(var_name)
+        return value is not None and value.strip() != ""
+
+    def _is_env_var_exists(var_name: str) -> bool:
+        """Check if environment variable exists (even if empty)."""
+        return var_name in os.environ
+
+    # Define required environment variables for each provider
+    provider_env_vars = {
+        "codex": [],
+        "codex_app": [],
+        "anthropic": ["ANTHROPIC_API_KEY"],
+        "openai": ["OPENAI_API_KEY"],
+        "openrouter": ["OPENROUTER_API_KEY"],
+        "gemini": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],  # Either one
+        "ollama": ["OLLAMA_BASE_URL"],
+        "litellm": ["LITELLM_API_KEY"],  # May need others depending on backend
+    }
+
+    if provider_name:
+        # Validate specific provider
+        if provider_name not in provider_env_vars:
+            warnings.append(f"Unknown provider '{provider_name}' - cannot validate configuration")
+            return warnings
+
+        env_vars = provider_env_vars[provider_name]
+        if not env_vars:
+            return warnings
+        missing_vars = []
+
+        if provider_name == "gemini":
+            # Special case: either GEMINI_API_KEY or GOOGLE_API_KEY
+            if not (_is_env_var_set("GEMINI_API_KEY") or _is_env_var_set("GOOGLE_API_KEY")):
+                missing_vars = env_vars
+        else:
+            for var in env_vars:
+                if not _is_env_var_set(var):
+                    missing_vars.append(var)
+
+        if missing_vars:
+            warnings.append(
+                f"Provider '{provider_name}' requires environment variables: {', '.join(missing_vars)}"
+            )
+    else:
+        # Check all providers - warn about any that could be configured but are missing keys
+        for name, env_vars in provider_env_vars.items():
+            if name == "gemini":
+                if os.environ.get("CODEX_WISE_PROVIDER") == "gemini" and not (
+                    _is_env_var_set("GEMINI_API_KEY") or _is_env_var_set("GOOGLE_API_KEY")
+                ):
+                    # Only warn if it looks like they might be trying to use gemini
+                    warnings.append(
+                        "Provider 'gemini' requires GEMINI_API_KEY or GOOGLE_API_KEY environment variable"
+                    )
+                continue
+
+            missing = [var for var in env_vars if not _is_env_var_set(var)]
+            if missing:
+                # Only warn if this provider is explicitly requested OR
+                # if the env var exists but is invalid (empty)
+                env_var_exists = any(_is_env_var_exists(var) for var in env_vars)
+                explicitly_requested = (
+                    os.environ.get("CODEX_WISE_PROVIDER") == name
+                )
+
+                if explicitly_requested or env_var_exists:
+                    warnings.append(
+                        f"Provider '{name}' requires environment variables: {', '.join(missing)}"
+                    )
+
+    return warnings

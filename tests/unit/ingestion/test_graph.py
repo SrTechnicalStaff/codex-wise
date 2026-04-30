@@ -6,8 +6,8 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-from repowise.core.ingestion.graph import GraphBuilder
-from repowise.core.ingestion.models import FileInfo, Import, ParsedFile
+from codex_wise.core.ingestion.graph import GraphBuilder
+from codex_wise.core.ingestion.models import FileInfo, Import, ParsedFile
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -342,7 +342,7 @@ class TestTypeScriptImports:
         """Non-relative import resolved via TsconfigResolver instead of external:."""
         import json
 
-        from repowise.core.ingestion.tsconfig_resolver import TsconfigResolver
+        from codex_wise.core.ingestion.tsconfig_resolver import TsconfigResolver
 
         # Write a tsconfig with @/* -> ./src/*
         tsconfig = tmp_path / "tsconfig.json"
@@ -380,7 +380,7 @@ class TestTypeScriptImports:
         """Unmatched alias still creates external: node."""
         import json
 
-        from repowise.core.ingestion.tsconfig_resolver import TsconfigResolver
+        from codex_wise.core.ingestion.tsconfig_resolver import TsconfigResolver
 
         tsconfig = tmp_path / "tsconfig.json"
         tsconfig.write_text(
@@ -431,7 +431,7 @@ class TestTypeScriptImports:
 # ---------------------------------------------------------------------------
 
 
-class TestGoImports:
+class TestGoStemImports:
     def test_go_stem_resolution(self) -> None:
         b = GraphBuilder()
         b.add_file(_parsed("calculator/calculator.go", language="go"))
@@ -444,6 +444,55 @@ class TestGoImports:
         )
         b.build()
         assert b.graph().has_edge("main.go", "calculator/calculator.go")
+
+
+# ---------------------------------------------------------------------------
+# Dart import resolution
+# ---------------------------------------------------------------------------
+
+
+class TestDartImports:
+    def test_relative_dart_import(self) -> None:
+        b = GraphBuilder()
+        b.add_file(_parsed("lib/models.dart", language="dart"))
+        b.add_file(
+            _parsed(
+                "lib/calculator.dart",
+                language="dart",
+                imports=[_imp("./models.dart", is_relative=True)],
+            )
+        )
+        b.build()
+        assert b.graph().has_edge("lib/calculator.dart", "lib/models.dart")
+
+    def test_package_import_resolves_to_lib_path(self) -> None:
+        b = GraphBuilder()
+        b.add_file(_parsed("lib/src/models.dart", language="dart"))
+        b.add_file(
+            _parsed(
+                "lib/calculator.dart",
+                language="dart",
+                imports=[_imp("package:sample/src/models.dart")],
+            )
+        )
+        b.build()
+        assert b.graph().has_edge("lib/calculator.dart", "lib/src/models.dart")
+
+    def test_dart_sdk_import_is_external_ignored(self) -> None:
+        b = GraphBuilder()
+        b.add_file(
+            _parsed(
+                "lib/main.dart",
+                language="dart",
+                imports=[_imp("dart:async")],
+            )
+        )
+        b.build()
+        import_edges = [
+            (u, v) for u, v, d in b.graph().edges(data=True)
+            if d.get("edge_type") == "imports"
+        ]
+        assert len(import_edges) == 0
 
 
 # ---------------------------------------------------------------------------

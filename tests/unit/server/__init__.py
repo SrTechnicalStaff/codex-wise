@@ -1,1 +1,1 @@
-"""Unit tests for the repowise server package."""
+"""Unit tests for the Codex Wise server package."""

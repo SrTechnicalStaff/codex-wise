@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from repowise.core.providers.llm.base import BaseProvider
-from repowise.core.providers.llm.mock import MockProvider
-from repowise.core.providers.llm.registry import (
+from codex_wise.core.providers.llm.base import BaseProvider
+from codex_wise.core.providers.llm.mock import MockProvider
+from codex_wise.core.providers.llm.registry import (
     _BUILTIN_PROVIDERS,
     get_provider,
     list_providers,
@@ -21,6 +21,7 @@ from repowise.core.providers.llm.registry import (
 class TestListProviders:
     def test_includes_all_builtin_providers(self) -> None:
         providers = list_providers()
+        assert "codex" in providers
         assert "codex_app" in providers
         assert "anthropic" in providers
         assert "openai" in providers
@@ -116,5 +117,5 @@ class TestCustomProviderRegistration:
         assert received.get("api_key") == "key-123"
 
     def test_builtin_count(self) -> None:
-        """Sanity check: we have exactly 8 built-in providers."""
-        assert len(_BUILTIN_PROVIDERS) == 8
+        """Sanity check: we have exactly 9 built-in providers."""
+        assert len(_BUILTIN_PROVIDERS) == 9

@@ -6,9 +6,9 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.rust import resolve_rust_import
-from repowise.core.ingestion.resolvers.rust_workspace import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.rust import resolve_rust_import
+from codex_wise.core.ingestion.resolvers.rust_workspace import (
     get_or_build_cargo_workspace_index,
 )
 

@@ -5,18 +5,11 @@ import { Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const MCP_CONFIG = JSON.stringify(
-  {
-    mcpServers: {
-      repowise: {
-        command: "repowise",
-        args: ["mcp", "/path/to/your/repo", "--transport", "stdio"],
-      },
-    },
-  },
-  null,
-  2,
-);
+const MCP_CONFIG = [
+  "[mcp_servers.codex_wise]",
+  'command = "codex-wise"',
+  'args = ["mcp", "/path/to/your/repo", "--transport", "stdio"]',
+].join("\n");
 
 export function McpSection() {
   const [copied, setCopied] = useState(false);
@@ -32,7 +25,7 @@ export function McpSection() {
       <CardHeader>
         <CardTitle className="text-base">MCP Config</CardTitle>
         <CardDescription>
-          Add to your Claude Code, Cursor, or Cline MCP config to enable AI-powered codebase Q&amp;A.
+          Project-scoped Codex config for codebase Q&amp;A.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -56,7 +49,7 @@ export function McpSection() {
         <p className="text-xs text-[var(--color-text-tertiary)]">
           Replace <code className="font-mono">/path/to/your/repo</code> with the local path
           of the repository you want to query. Run{" "}
-          <code className="font-mono">repowise init</code> first to generate documentation.
+          <code className="font-mono">codex-wise init</code> first to generate documentation.
         </p>
       </CardContent>
     </Card>

@@ -3,7 +3,7 @@ info:
   title: Sample Calculator API
   version: "1.0.0"
   description: >
-    A simple arithmetic API used as a fixture for repowise ingestion tests.
+    A simple arithmetic API used as a fixture for Codex Wise ingestion tests.
     Supports four operations: add, subtract, multiply, divide.
 
 paths:

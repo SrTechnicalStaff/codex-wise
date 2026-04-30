@@ -6,9 +6,9 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.swift import resolve_swift_import
-from repowise.core.ingestion.resolvers.swift_spm import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.swift import resolve_swift_import
+from codex_wise.core.ingestion.resolvers.swift_spm import (
     build_swift_targets,
     parse_package_swift,
 )

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from repowise.core.ingestion.tsconfig_resolver import TsconfigResolver
+from codex_wise.core.ingestion.tsconfig_resolver import TsconfigResolver
 
 # ---------------------------------------------------------------------------
 # Helpers

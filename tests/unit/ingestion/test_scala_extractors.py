@@ -6,8 +6,8 @@ from datetime import datetime
 
 import pytest
 
-from repowise.core.ingestion.models import FileInfo
-from repowise.core.ingestion.parser import ASTParser
+from codex_wise.core.ingestion.models import FileInfo
+from codex_wise.core.ingestion.parser import ASTParser
 
 
 def _file(path: str = "Foo.scala") -> FileInfo:

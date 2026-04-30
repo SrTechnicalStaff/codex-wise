@@ -1,6 +1,6 @@
 """Verify that file-backed SQLite engines come up with WAL, busy_timeout, and FK
 constraints enabled. These are the settings that make concurrent
-``repowise update`` invocations on the same workspace stop colliding (issue #95).
+``codex-wise update`` invocations on the same workspace stop colliding (issue #95).
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from repowise.core.persistence import create_engine, init_db
+from codex_wise.core.persistence import create_engine, init_db
 
 
 async def _read_pragma(engine, pragma: str) -> str:

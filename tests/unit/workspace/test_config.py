@@ -1,4 +1,4 @@
-"""Tests for repowise.core.workspace.config — workspace configuration."""
+"""Tests for codex_wise.core.workspace.config — workspace configuration."""
 
 from __future__ import annotations
 
@@ -6,10 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from repowise.core.workspace.config import (
+from codex_wise.core.workspace.config import (
+    WORKSPACE_DATA_DIR,
     WORKSPACE_CONFIG_FILENAME,
     RepoEntry,
     WorkspaceConfig,
+    ensure_workspace_data_dir,
     find_workspace_root,
 )
 
@@ -176,6 +178,12 @@ class TestWorkspaceConfigSerialization:
         text = (tmp_path / WORKSPACE_CONFIG_FILENAME).read_text(encoding="utf-8")
         assert "libs/shared" in text
         assert "\\" not in text  # no backslashes
+
+    def test_workspace_data_dir_created_on_write(self, tmp_path: Path) -> None:
+        data_dir = ensure_workspace_data_dir(tmp_path)
+
+        assert data_dir == tmp_path / WORKSPACE_DATA_DIR
+        assert data_dir.exists()
 
 
 # ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from repowise.core.providers.llm.codex_app import CodexAppProvider
+from codex_wise.core.providers.llm.codex_app import CodexAppProvider
 
 
 @pytest.mark.asyncio

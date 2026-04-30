@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from repowise.core.providers.llm.base import ProviderError
-from repowise.core.providers.llm.codex_app import CodexAppProvider
+from codex_wise.core.providers.llm.base import ProviderError
+from codex_wise.core.providers.llm.codex_app import CodexAppProvider
 
 
 class FakeClient:

@@ -12,17 +12,9 @@ const KEYS = {
   embedder: "codex_wise_embedder",
 } as const;
 
-const LEGACY_KEYS: Record<string, string> = {
-  [KEYS.apiKey]: "repowise_api_key",
-  [KEYS.apiUrl]: "repowise_api_url",
-  [KEYS.provider]: "repowise_default_provider",
-  [KEYS.model]: "repowise_default_model",
-  [KEYS.embedder]: "repowise_embedder",
-};
-
 function read(key: string): string {
   if (typeof window === "undefined") return "";
-  return localStorage.getItem(key) ?? localStorage.getItem(LEGACY_KEYS[key] ?? "") ?? "";
+  return localStorage.getItem(key) ?? "";
 }
 
 function write(key: string, value: string): void {

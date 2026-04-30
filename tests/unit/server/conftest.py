@@ -13,21 +13,22 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.search import FullTextSearch
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.search import FullTextSearch
+from codex_wise.core.persistence.vector_store import InMemoryVectorStore
+from codex_wise.core.providers.embedding.base import MockEmbedder
 
 
 def _create_test_app():
     """Create a FastAPI app without the lifespan (we manage state manually)."""
     from contextlib import asynccontextmanager
 
+    from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
 
-    from fastapi import FastAPI
-    from repowise.server.routers import (
+    from codex_wise.server.routers import (
+        agents_md,
         dead_code,
         git,
         graph,
@@ -44,7 +45,7 @@ def _create_test_app():
     async def noop_lifespan(app: FastAPI):
         yield
 
-    app = FastAPI(title="repowise API Test", lifespan=noop_lifespan)
+    app = FastAPI(title="Codex Wise API Test", lifespan=noop_lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -70,6 +71,7 @@ def _create_test_app():
     app.include_router(webhooks.router)
     app.include_router(git.router)
     app.include_router(dead_code.router)
+    app.include_router(agents_md.router)
 
     return app
 

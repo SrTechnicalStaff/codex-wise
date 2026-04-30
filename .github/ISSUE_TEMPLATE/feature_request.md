@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for Repowise
+about: Suggest an idea
 title: "[Feature] "
 labels: enhancement
 assignees: ""

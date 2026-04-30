@@ -11,8 +11,8 @@ import pytest
 
 pytest.importorskip("google.genai", reason="google-genai SDK not installed")
 
-from repowise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
-from repowise.core.providers.llm.gemini import GeminiProvider
+from codex_wise.core.providers.llm.base import GeneratedResponse, ProviderError, RateLimitError
+from codex_wise.core.providers.llm.gemini import GeminiProvider
 
 # ---------------------------------------------------------------------------
 # Construction

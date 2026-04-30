@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/repowise-ai/sample/calculator"
-	"github.com/repowise-ai/sample/types"
+	"github.com/codex-wise/sample/calculator"
+	"github.com/codex-wise/sample/types"
 )
 
 func main() {

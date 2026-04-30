@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from repowise.core.persistence.database import get_session
-from repowise.core.persistence.models import WikiSymbol, _new_uuid
-from repowise.server.mcp_server.tool_symbol import (
+from codex_wise.core.persistence.database import get_session
+from codex_wise.core.persistence.models import WikiSymbol, _new_uuid
+from codex_wise.server.mcp_server.tool_symbol import (
     _name_variants,
     _pick_canonical,
     _resolve_symbol,

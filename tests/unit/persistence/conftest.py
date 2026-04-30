@@ -11,9 +11,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from repowise.core.persistence.database import init_db
-from repowise.core.persistence.vector_store import InMemoryVectorStore
-from repowise.core.providers.embedding.base import MockEmbedder
+from codex_wise.core.persistence.database import init_db
+from codex_wise.core.persistence.vector_store import InMemoryVectorStore
+from codex_wise.core.providers.embedding.base import MockEmbedder
 from tests.unit.persistence.helpers import insert_repo, make_page_kwargs, make_repo_kwargs
 
 

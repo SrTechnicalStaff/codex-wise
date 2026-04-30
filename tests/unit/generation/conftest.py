@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 import networkx as nx
 import pytest
 
-from repowise.core.generation.models import GenerationConfig
-from repowise.core.ingestion.models import (
+from codex_wise.core.generation.models import GenerationConfig
+from codex_wise.core.ingestion.models import (
     FileInfo,
     Import,
     PackageInfo,
@@ -16,7 +16,7 @@ from repowise.core.ingestion.models import (
     RepoStructure,
     Symbol,
 )
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.providers.llm.mock import MockProvider
 
 # ---------------------------------------------------------------------------
 # Helper functions (module-level, not fixtures)

@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("openai", reason="openai SDK not installed")
 
-from repowise.core.providers.embedding.openai import OpenAIEmbedder
+from codex_wise.core.providers.embedding.openai import OpenAIEmbedder
 
 # ---------------------------------------------------------------------------
 # Construction

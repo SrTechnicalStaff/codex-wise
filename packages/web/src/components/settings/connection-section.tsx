@@ -47,7 +47,7 @@ export function ConnectionSection() {
       <CardHeader>
         <CardTitle className="text-base">API Connection</CardTitle>
         <CardDescription>
-            Configure how the UI connects to your Codex Wise server.
+          Configure how the UI connects to the local server.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -71,7 +71,7 @@ export function ConnectionSection() {
           <Input
             id="api-key"
             type="password"
-              placeholder="Optional — only required if CODEX_WISE_API_KEY is set on the server"
+            placeholder="Optional — only required if the server requires an API key"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             onBlur={save}

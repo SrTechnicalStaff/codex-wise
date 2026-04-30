@@ -18,8 +18,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from repowise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
-from repowise.core.ingestion.language_data import BUILTIN_CALLS, BUILTIN_PARENTS, get_builtin_calls
+from codex_wise.core.ingestion import ASTParser, FileTraverser, GraphBuilder
+from codex_wise.core.ingestion.language_data import BUILTIN_CALLS, BUILTIN_PARENTS, get_builtin_calls
 
 
 def main() -> None:

@@ -7,12 +7,12 @@ from pathlib import Path
 
 import networkx as nx
 
-from repowise.core.ingestion.resolvers.context import ResolverContext
-from repowise.core.ingestion.resolvers.ts_workspace import (
+from codex_wise.core.ingestion.resolvers.context import ResolverContext
+from codex_wise.core.ingestion.resolvers.ts_workspace import (
     build_workspace_map,
     resolve_via_workspaces,
 )
-from repowise.core.ingestion.resolvers.typescript import resolve_ts_js_import
+from codex_wise.core.ingestion.resolvers.typescript import resolve_ts_js_import
 
 
 def _ctx(repo: Path, paths: list[str], has_sfc: bool = False) -> ResolverContext:

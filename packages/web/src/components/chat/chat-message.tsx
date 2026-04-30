@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { User } from "lucide-react";
+import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ToolCallBlock } from "./tool-call-block";
 import { ChatMarkdown } from "./chat-markdown";
@@ -31,13 +30,7 @@ export function ChatMessage({ message, repoId, onViewArtifact }: ChatMessageProp
         {isUser ? (
           <User className="h-4 w-4 text-white" />
         ) : (
-          <Image
-            src="/repowise-logo.png"
-            alt="repowise"
-            width={22}
-            height={22}
-            className="drop-shadow-[0_0_4px_rgba(245,149,32,0.25)]"
-          />
+          <Bot className="h-4 w-4 text-[var(--color-accent-primary)]" />
         )}
       </div>
 

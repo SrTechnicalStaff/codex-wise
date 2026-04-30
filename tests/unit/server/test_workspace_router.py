@@ -12,8 +12,8 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from httpx import ASGITransport, AsyncClient
 
-from repowise.server.mcp_server._enrichment import CrossRepoEnricher
-from repowise.server.routers import workspace
+from codex_wise.server.mcp_server._enrichment import CrossRepoEnricher
+from codex_wise.server.routers import workspace
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ from pathlib import Path
 import jinja2
 import pytest
 
-from repowise.core.generation.context_assembler import (
+from codex_wise.core.generation.context_assembler import (
     ApiContractContext,
     ArchitectureDiagramContext,
     DiffSummaryContext,
@@ -19,7 +19,7 @@ from repowise.core.generation.context_assembler import (
     SymbolSpotlightContext,
     _TopFile,
 )
-from repowise.core.ingestion.models import PackageInfo
+from codex_wise.core.ingestion.models import PackageInfo
 
 # ---------------------------------------------------------------------------
 # Fixture: Jinja2 environment pointing at the real templates directory
@@ -33,7 +33,7 @@ def jinja_env() -> jinja2.Environment:
         / "packages"
         / "core"
         / "src"
-        / "repowise"
+        / "codex_wise"
         / "core"
         / "generation"
         / "templates"

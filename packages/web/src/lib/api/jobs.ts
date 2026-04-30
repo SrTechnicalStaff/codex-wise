@@ -16,6 +16,8 @@ export async function getJob(jobId: string): Promise<JobResponse> {
 
 /** Returns the SSE stream URL for a job. Use with EventSource or the useSSE hook. */
 export function getJobStreamUrl(jobId: string): string {
-  const base = process.env.NEXT_PUBLIC_REPOWISE_API_URL ?? "";
+  const base =
+    process.env.NEXT_PUBLIC_CODEX_WISE_API_URL ??
+    "";
   return `${base}/api/jobs/${jobId}/stream`;
 }

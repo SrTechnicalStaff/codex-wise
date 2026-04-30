@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Codex Wise - unified PyPI package
+# Unified PyPI package
 # ---------------------------------------------------------------------------
 [build-system]
 requires = ["setuptools>=75"]
@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "codex-wise"
 version = "0.4.0"
-description = "Codebase intelligence for developers and AI — generates and maintains a structured wiki for any codebase"
+description = "Operational codebase context for Codex-native workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "AGPL-3.0-only"
@@ -111,58 +111,52 @@ dev = [
 ]
 
 [project.scripts]
-repowise = "repowise.cli.main:cli"
-codex-wise = "repowise.cli.main:cli"
-
-[project.urls]
-Homepage = "https://github.com/repowise-dev/codex-wise"
-Repository = "https://github.com/repowise-dev/codex-wise"
-Issues = "https://github.com/repowise-dev/codex-wise/issues"
-Documentation = "https://github.com/repowise-dev/codex-wise/blob/main/docs/USER_GUIDE.md"
+codex-wise = "codex_wise.cli.main:cli"
 
 # ---------------------------------------------------------------------------
 # setuptools — explicit package-dir mapping across three src/ directories
 # ---------------------------------------------------------------------------
 [tool.setuptools.package-dir]
-"repowise.core" = "packages/core/src/repowise/core"
-"repowise.cli" = "packages/cli/src/repowise/cli"
-"repowise.server" = "packages/server/src/repowise/server"
+"codex_wise.core" = "packages/core/src/codex_wise/core"
+"codex_wise.cli" = "packages/cli/src/codex_wise/cli"
+"codex_wise.server" = "packages/server/src/codex_wise/server"
 
 [tool.setuptools]
 packages = [
     # core
-    "repowise.core",
-    "repowise.core.analysis",
-    "repowise.core.generation",
-    "repowise.core.generation.editor_files",
-    "repowise.core.ingestion",
-    "repowise.core.ingestion.dynamic_hints",
-    "repowise.core.ingestion.extractors",
-    "repowise.core.ingestion.extractors.bindings",
-    "repowise.core.ingestion.extractors.heritage",
-    "repowise.core.ingestion.languages",
-    "repowise.core.ingestion.resolvers",
-    "repowise.core.ingestion.resolvers.dotnet",
-    "repowise.core.pipeline",
-    "repowise.core.persistence",
-    "repowise.core.providers",
-    "repowise.core.providers.llm",
-    "repowise.core.providers.embedding",
-    "repowise.core.workspace",
-    "repowise.core.workspace.extractors",
+    "codex_wise.core",
+    "codex_wise.core.analysis",
+    "codex_wise.core.analysis.dead_code",
+    "codex_wise.core.generation",
+    "codex_wise.core.generation.editor_files",
+    "codex_wise.core.ingestion",
+    "codex_wise.core.ingestion.dynamic_hints",
+    "codex_wise.core.ingestion.extractors",
+    "codex_wise.core.ingestion.extractors.bindings",
+    "codex_wise.core.ingestion.extractors.heritage",
+    "codex_wise.core.ingestion.languages",
+    "codex_wise.core.ingestion.resolvers",
+    "codex_wise.core.ingestion.resolvers.dotnet",
+    "codex_wise.core.pipeline",
+    "codex_wise.core.persistence",
+    "codex_wise.core.providers",
+    "codex_wise.core.providers.llm",
+    "codex_wise.core.providers.embedding",
+    "codex_wise.core.workspace",
+    "codex_wise.core.workspace.extractors",
     # cli
-    "repowise.cli",
-    "repowise.cli.commands",
+    "codex_wise.cli",
+    "codex_wise.cli.commands",
     # server
-    "repowise.server",
-    "repowise.server.routers",
-    "repowise.server.mcp_server",
-    "repowise.server.services",
+    "codex_wise.server",
+    "codex_wise.server.routers",
+    "codex_wise.server.mcp_server",
+    "codex_wise.server.services",
 ]
 
 [tool.setuptools.package-data]
-"repowise.core.ingestion" = ["queries/*.scm"]
-"repowise.core.generation" = ["templates/*.j2"]
+"codex_wise.core.ingestion" = ["queries/*.scm"]
+"codex_wise.core.generation" = ["templates/*.j2"]
 
 # ---------------------------------------------------------------------------
 # uv workspace (kept for local development)
@@ -210,7 +204,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["repowise"]
+known-first-party = ["codex_wise"]
 
 # ---------------------------------------------------------------------------
 # mypy — strict type checking

@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from repowise.core.providers.llm.base import BaseProvider, GeneratedResponse
-from repowise.core.providers.llm.config import resolve_llm_provider
+from codex_wise.core.providers.llm.base import BaseProvider, GeneratedResponse
+from codex_wise.core.providers.llm.config import resolve_llm_provider
 
 
 class FakeProvider(BaseProvider):
@@ -41,9 +41,6 @@ def _clear_provider_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "CODEX_WISE_CODEX_APP_SERVER_URL",
         "CODEX_WISE_CODEX_APP_SERVER_SOCKET",
         "CODEX_WISE_CODEX_TIMEOUT_SECONDS",
-        "REPOWISE_PROVIDER",
-        "REPOWISE_DOC_MODEL",
-        "REPOWISE_MODEL",
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "OPENROUTER_API_KEY",
@@ -65,7 +62,7 @@ def test_codex_wise_provider_codex_app_selects_codex_provider(
         captured["kwargs"] = kwargs
         return FakeProvider(name, kwargs.get("model", "fake-model"))
 
-    monkeypatch.setattr("repowise.core.providers.llm.config.get_provider", fake_get_provider)
+    monkeypatch.setattr("codex_wise.core.providers.llm.config.get_provider", fake_get_provider)
     monkeypatch.setenv("CODEX_WISE_PROVIDER", "codex_app")
     monkeypatch.setenv("CODEX_WISE_MODEL", "gpt-5.4-mini")
     monkeypatch.setenv("CODEX_WISE_CODEX_TRANSPORT", "proxy")
@@ -83,24 +80,6 @@ def test_codex_wise_provider_codex_app_selects_codex_provider(
     assert captured["kwargs"]["timeout_seconds"] == "42"
 
 
-def test_legacy_repowise_provider_still_resolves(monkeypatch: pytest.MonkeyPatch) -> None:
-    _clear_provider_env(monkeypatch)
-
-    def fake_get_provider(name: str, **kwargs: Any) -> FakeProvider:
-        return FakeProvider(name, kwargs.get("model", "fake-model"))
-
-    monkeypatch.setattr("repowise.core.providers.llm.config.get_provider", fake_get_provider)
-    monkeypatch.setenv("REPOWISE_PROVIDER", "openai")
-    monkeypatch.setenv("REPOWISE_MODEL", "legacy-model")
-    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
-
-    resolution = resolve_llm_provider()
-
-    assert resolution.provider is not None
-    assert resolution.provider_name == "openai"
-    assert resolution.model_name == "legacy-model"
-
-
 def test_explicit_api_key_provider_still_resolves(monkeypatch: pytest.MonkeyPatch) -> None:
     _clear_provider_env(monkeypatch)
     captured: dict[str, Any] = {}
@@ -110,7 +89,7 @@ def test_explicit_api_key_provider_still_resolves(monkeypatch: pytest.MonkeyPatc
         captured["kwargs"] = kwargs
         return FakeProvider(name, kwargs.get("model", "fake-model"))
 
-    monkeypatch.setattr("repowise.core.providers.llm.config.get_provider", fake_get_provider)
+    monkeypatch.setattr("codex_wise.core.providers.llm.config.get_provider", fake_get_provider)
     monkeypatch.setenv("CODEX_WISE_PROVIDER", "openai")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 
@@ -128,7 +107,7 @@ def test_auto_detect_api_key_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_get_provider(name: str, **kwargs: Any) -> FakeProvider:
         return FakeProvider(name, kwargs.get("model", "fake-model"))
 
-    monkeypatch.setattr("repowise.core.providers.llm.config.get_provider", fake_get_provider)
+    monkeypatch.setattr("codex_wise.core.providers.llm.config.get_provider", fake_get_provider)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
 
     resolution = resolve_llm_provider()
@@ -148,7 +127,7 @@ def test_explicit_codex_app_failure_does_not_fall_back(
             raise RuntimeError("app-server unavailable")
         raise AssertionError(f"unexpected fallback to {name}")
 
-    monkeypatch.setattr("repowise.core.providers.llm.config.get_provider", fake_get_provider)
+    monkeypatch.setattr("codex_wise.core.providers.llm.config.get_provider", fake_get_provider)
     monkeypatch.setenv("CODEX_WISE_PROVIDER", "codex_app")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 

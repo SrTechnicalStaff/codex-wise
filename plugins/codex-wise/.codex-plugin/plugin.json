@@ -1,26 +1,43 @@
 {
-  "schemaVersion": 1,
   "name": "codex-wise",
-  "title": "Codex Wise",
-  "description": "Codex Wise MCP context and skills for Codex.",
-  "version": "0.4.0-codex",
-  "publisher": "codex-wise-dev",
-  "license": "AGPL-3.0-only",
-  "mcpServers": {
-    "codex-wise": {
-      "command": "codex-wise",
-      "args": ["mcp", "--transport", "stdio"],
-      "env": {
-        "CODEX_WISE_PROVIDER": "codex_app",
-        "CODEX_WISE_CODEX_TRANSPORT": "proxy",
-        "CODEX_WISE_DOC_MODEL": "gpt-5.5",
-        "CODEX_WISE_CODEX_REASONING_EFFORT": "medium"
-      }
-    }
+  "version": "0.4.1",
+  "description": "Local codebase intelligence for Codex and MCP-capable coding agents.",
+  "author": {
+    "name": "Codex Wise",
+    "url": "https://github.com/SrTechnicalStaff/codex-wise"
   },
-  "skills": [
-    "skills/codebase-exploration",
-    "skills/pre-modification",
-    "skills/dead-code-cleanup"
-  ]
+  "homepage": "https://github.com/SrTechnicalStaff/codex-wise",
+  "repository": "https://github.com/SrTechnicalStaff/codex-wise",
+  "license": "AGPL-3.0-only",
+  "keywords": [
+    "codex",
+    "codebase",
+    "mcp",
+    "architecture",
+    "git",
+    "dead-code"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex Wise",
+    "shortDescription": "Codebase intelligence through local MCP tools.",
+    "longDescription": "Codex Wise indexes source, git history, generated docs, architectural decisions, and dead-code findings, then exposes that context to Codex through MCP tools and skills.",
+    "developerName": "Codex Wise",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/SrTechnicalStaff/codex-wise",
+    "privacyPolicyURL": "https://github.com/SrTechnicalStaff/codex-wise",
+    "termsOfServiceURL": "https://github.com/SrTechnicalStaff/codex-wise",
+    "defaultPrompt": [
+      "Use Codex Wise to explain this repository.",
+      "Check Codex Wise context before editing shared code.",
+      "Find architectural decisions related to this change."
+    ],
+    "brandColor": "#2563EB"
+  }
 }

@@ -53,10 +53,10 @@ export function WebhookSection() {
             Required env vars on the server
           </p>
           <p className="text-xs font-mono text-[var(--color-text-tertiary)]">
-            REPOWISE_GITHUB_WEBHOOK_SECRET=your-secret
+            CODEX_WISE_GITHUB_WEBHOOK_SECRET=your-secret
           </p>
           <p className="text-xs font-mono text-[var(--color-text-tertiary)]">
-            REPOWISE_GITLAB_WEBHOOK_TOKEN=your-token
+            CODEX_WISE_GITLAB_WEBHOOK_TOKEN=your-token
           </p>
           <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
             Omit these vars to skip signature verification during development.

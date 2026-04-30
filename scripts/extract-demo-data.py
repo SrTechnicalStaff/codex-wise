@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract data from fastapi/.repowise/wiki.db into static JSON files for the hosted frontend demo."""
+"""Extract data from fastapi/.codex-wise/wiki.db into static JSON files for the hosted frontend demo."""
 
 import json
 import os
@@ -7,8 +7,8 @@ import sqlite3
 from collections import defaultdict
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "fastapi" / ".repowise" / "wiki.db"
-OUT_DIR = Path(__file__).parent.parent / "repowise-hosted-frontend" / "public" / "data" / "fastapi"
+DB_PATH = Path(__file__).parent.parent / "fastapi" / ".codex-wise" / "wiki.db"
+OUT_DIR = Path(__file__).parent.parent / "codex-wise-hosted-frontend" / "public" / "data" / "fastapi"
 REPO_ID = "4912f43143cb4cb881ee805268de797c"
 
 

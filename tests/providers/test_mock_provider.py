@@ -7,8 +7,8 @@ access are required to run these tests.
 
 from __future__ import annotations
 
-from repowise.core.providers.llm.base import BaseProvider, GeneratedResponse
-from repowise.core.providers.llm.mock import MockProvider
+from codex_wise.core.providers.llm.base import BaseProvider, GeneratedResponse
+from codex_wise.core.providers.llm.mock import MockProvider
 
 # ---------------------------------------------------------------------------
 # Interface contract

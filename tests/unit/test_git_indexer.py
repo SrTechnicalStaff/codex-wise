@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from repowise.core.ingestion.git_indexer import GitIndexer
+from codex_wise.core.ingestion.git_indexer import GitIndexer
 
 # ---------------------------------------------------------------------------
 # Helpers
