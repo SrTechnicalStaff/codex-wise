@@ -1,4 +1,4 @@
-"""``repowise mcp`` — Start the MCP server for editor integration."""
+"""``codex-wise mcp`` - start the MCP server for editor integration."""
 
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ def mcp_command(path: str | None, transport: str, port: int) -> None:
 
     Examples:
 
-        repowise mcp                     # stdio, current directory
-        repowise mcp /path/to/repo       # stdio, specific repo
-        repowise mcp --transport sse     # SSE on port 7338
+        codex-wise mcp                     # stdio, current directory
+        codex-wise mcp /path/to/repo       # stdio, specific repo
+        codex-wise mcp --transport sse     # SSE on port 7338
     """
     repo_path = resolve_repo_path(path)
 
@@ -44,7 +44,7 @@ def mcp_command(path: str | None, transport: str, port: int) -> None:
 
     if transport == "sse":
         console.print(
-            f"[bold green]Starting repowise MCP server (SSE) on port {port}...[/bold green]"
+            f"[bold green]Starting Codex Wise MCP server (SSE) on port {port}...[/bold green]"
         )
     else:
         # stdio mode — no console output (it would corrupt the protocol)

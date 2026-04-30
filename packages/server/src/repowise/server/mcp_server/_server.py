@@ -230,7 +230,7 @@ async def _lifespan(server: FastMCP):
             _log.debug("Cross-repo enricher not available", exc_info=True)
 
         _log.info(
-            "repowise MCP: workspace mode — %d repos, default='%s'",
+            "Codex Wise MCP: workspace mode - %d repos, default='%s'",
             len(ws_config.repos),
             registry.get_default_alias(),
         )
@@ -268,7 +268,7 @@ async def _lifespan(server: FastMCP):
     if db_url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
 
-    _log.info("repowise MCP: initialising database…")
+    _log.info("Codex Wise MCP: initialising database")
     engine = create_async_engine(db_url, connect_args=connect_args)
     await init_db(engine)
 
@@ -288,7 +288,7 @@ async def _lifespan(server: FastMCP):
     # the server starts accepting connections without blocking on disk I/O.
     _state._vector_store_ready = asyncio.Event()
     _bg_task = asyncio.create_task(_load_vector_stores(_state._repo_path))
-    _log.info("repowise MCP: ready (vector stores loading in background)")
+    _log.info("Codex Wise MCP: ready (vector stores loading in background)")
 
     yield
 

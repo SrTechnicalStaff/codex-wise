@@ -2,14 +2,20 @@
   "schemaVersion": 1,
   "name": "codex-wise",
   "title": "Codex Wise",
-  "description": "Repowise MCP context and skills for Codex.",
+  "description": "Codex Wise MCP context and skills for Codex.",
   "version": "0.4.0-codex",
-  "publisher": "repowise-dev",
+  "publisher": "codex-wise-dev",
   "license": "AGPL-3.0-only",
   "mcpServers": {
-    "repowise": {
-      "command": "repowise",
-      "args": ["mcp", "--transport", "stdio"]
+    "codex-wise": {
+      "command": "codex-wise",
+      "args": ["mcp", "--transport", "stdio"],
+      "env": {
+        "CODEX_WISE_PROVIDER": "codex_app",
+        "CODEX_WISE_CODEX_TRANSPORT": "proxy",
+        "CODEX_WISE_DOC_MODEL": "gpt-5.5",
+        "CODEX_WISE_CODEX_REASONING_EFFORT": "medium"
+      }
     }
   },
   "skills": [

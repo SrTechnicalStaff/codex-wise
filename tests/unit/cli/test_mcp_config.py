@@ -8,7 +8,7 @@ import pytest
 from repowise.cli import mcp_config
 
 
-def _repowise_entry(repo_path: Path) -> dict:
+def _codex_wise_entry(repo_path: Path) -> dict:
     return mcp_config.generate_mcp_config(repo_path)["mcpServers"]
 
 
@@ -16,7 +16,7 @@ def test_save_root_mcp_config_creates_missing_file(tmp_path: Path) -> None:
     config_path = mcp_config.save_root_mcp_config(tmp_path)
 
     saved = json.loads(config_path.read_text(encoding="utf-8"))
-    assert "repowise" in saved["mcpServers"]
+    assert "codex-wise" in saved["mcpServers"]
 
 
 def test_save_root_mcp_config_merges_valid_existing_file(tmp_path: Path) -> None:
@@ -35,7 +35,7 @@ def test_save_root_mcp_config_merges_valid_existing_file(tmp_path: Path) -> None
 
     saved = json.loads(config_path.read_text(encoding="utf-8"))
     assert saved["mcpServers"]["other"] == {"command": "other"}
-    assert "repowise" in saved["mcpServers"]
+    assert "codex-wise" in saved["mcpServers"]
     assert saved["custom"] == {"preserved": True}
 
 
@@ -53,10 +53,10 @@ def test_save_root_mcp_config_rejects_invalid_existing_file(tmp_path: Path) -> N
 def test_merge_mcp_entry_creates_missing_file(tmp_path: Path) -> None:
     config_path = tmp_path / "settings.json"
 
-    assert mcp_config._merge_mcp_entry(config_path, _repowise_entry(tmp_path))
+    assert mcp_config._merge_mcp_entry(config_path, _codex_wise_entry(tmp_path))
 
     saved = json.loads(config_path.read_text(encoding="utf-8"))
-    assert "repowise" in saved["mcpServers"]
+    assert "codex-wise" in saved["mcpServers"]
 
 
 def test_merge_mcp_entry_merges_valid_existing_file(tmp_path: Path) -> None:
@@ -71,11 +71,11 @@ def test_merge_mcp_entry_merges_valid_existing_file(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    assert mcp_config._merge_mcp_entry(config_path, _repowise_entry(tmp_path))
+    assert mcp_config._merge_mcp_entry(config_path, _codex_wise_entry(tmp_path))
 
     saved = json.loads(config_path.read_text(encoding="utf-8"))
     assert saved["mcpServers"]["existing"] == {"command": "existing"}
-    assert "repowise" in saved["mcpServers"]
+    assert "codex-wise" in saved["mcpServers"]
     assert saved["permissions"] == {"allow": ["Bash(git status:*)"]}
 
 
@@ -85,7 +85,7 @@ def test_merge_mcp_entry_rejects_invalid_existing_file(tmp_path: Path) -> None:
     config_path.write_text(original, encoding="utf-8")
 
     with pytest.raises(click.ClickException, match=re.escape(str(config_path))):
-        mcp_config._merge_mcp_entry(config_path, _repowise_entry(tmp_path))
+        mcp_config._merge_mcp_entry(config_path, _codex_wise_entry(tmp_path))
 
     assert config_path.read_text(encoding="utf-8") == original
 
@@ -132,7 +132,7 @@ def test_install_claude_code_hooks_merges_valid_existing_file(
     assert saved["permissions"] == {"allow": ["Bash(git status:*)"]}
     assert saved["hooks"]["PreToolUse"][0]["matcher"] == "Read"
     assert any(
-        hook["command"] == "repowise augment"
+        hook["command"] == "codex-wise augment"
         for entry in saved["hooks"]["PreToolUse"]
         for hook in entry["hooks"]
     )

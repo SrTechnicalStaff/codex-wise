@@ -71,8 +71,8 @@ services:
       - ./:/repo
       - lancedb_data:/data/lancedb
     environment:
-      REPOWISE_DB_URL: postgresql+asyncpg://repowise:repowise@db:5432/repowise
-      REPOWISE_HOST: 0.0.0.0
+      CODEX_WISE_DB_URL: postgresql+asyncpg://repowise:repowise@db:5432/repowise
+      CODEX_WISE_HOST: 0.0.0.0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       db:
@@ -97,11 +97,11 @@ ANTHROPIC_API_KEY=sk-ant-... docker compose up
 | `ANTHROPIC_API_KEY` | — | Anthropic API key |
 | `OPENAI_API_KEY` | — | OpenAI API key |
 | `GEMINI_API_KEY` | — | Google Gemini API key |
-| `REPOWISE_PROVIDER` | auto | Override provider detection |
-| `REPOWISE_DB_URL` | SQLite (`.repowise/wiki.db`) | PostgreSQL connection string |
-| `REPOWISE_HOST` | `127.0.0.1` | API server bind host |
-| `REPOWISE_PORT` | `7337` | API server port |
-| `REPOWISE_MCP_PORT` | `7338` | MCP SSE server port |
+| `CODEX_WISE_PROVIDER` | auto | Override provider detection |
+| `CODEX_WISE_DB_URL` | SQLite (`.repowise/wiki.db`) | PostgreSQL connection string |
+| `CODEX_WISE_HOST` | `127.0.0.1` | API server bind host |
+| `CODEX_WISE_PORT` | `7337` | API server port |
+| `CODEX_WISE_MCP_PORT` | `7338` | MCP SSE server port |
 
 ---
 

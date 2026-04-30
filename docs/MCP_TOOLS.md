@@ -1,15 +1,15 @@
 # MCP Tools Reference
 
-repowise exposes 7 tools via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). These tools give AI coding assistants (Claude Code, Cursor, Cline, Windsurf) structured access to your codebase intelligence — dependency graph, git history, documentation, and architectural decisions.
+Codex Wise exposes 7 tools via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). These tools give AI coding assistants (Codex, Claude Code, Cursor, Cline, Windsurf) structured access to your codebase intelligence — dependency graph, git history, documentation, and architectural decisions.
 
 **Start the MCP server:**
 
 ```bash
-repowise mcp --transport stdio           # for Claude Code, Cursor, etc.
-repowise mcp --transport sse --port 7338 # for web clients
+codex-wise mcp --transport stdio           # for Claude Code, Cursor, etc.
+codex-wise mcp --transport sse --port 7338 # for web clients
 ```
 
-**Auto-setup for Claude Code:** `repowise init` automatically registers the MCP server and installs proactive hooks. No manual configuration needed.
+**Auto-setup for Claude Code:** `codex-wise init` automatically registers the MCP server and installs proactive hooks. No manual configuration needed.
 
 ---
 
@@ -51,7 +51,7 @@ get_overview()
 
 ## `get_answer`
 
-One-call RAG: retrieves over the wiki, gates synthesis on confidence, and returns a cited 2–5 sentence answer.
+One-call RAG: retrieves over the wiki, gates synthesis on confidence, and returns a cited 2–5 sentence answer. In Codex plugin launches, synthesis uses `CODEX_WISE_PROVIDER=codex_app` with `CODEX_WISE_CODEX_TRANSPORT=proxy`, so Codex users do not need a separate provider API key for this tool. Outside Codex, configure an API-key provider or let the tool return retrieval-only hits.
 
 **Parameters:**
 
@@ -207,7 +207,7 @@ get_dead_code(min_confidence=0.8, include_internals=true)
 
 ## Workspace Mode
 
-In workspace mode (initialized with `repowise init .`), all tools accept an optional `repo` parameter:
+In workspace mode (initialized with `codex-wise init .`), all tools accept an optional `repo` parameter:
 
 - **Omit `repo`** — queries the default (primary) repo
 - **`repo="backend"`** — targets a specific repo by alias
@@ -222,7 +222,7 @@ The MCP server automatically enriches responses with cross-repo intelligence:
 
 ## Proactive Hooks (Complementary)
 
-In addition to the 7 MCP tools, `repowise init` installs Claude Code hooks that provide **passive, automatic** context enrichment:
+In addition to the 7 MCP tools, `codex-wise init` installs Claude Code hooks that provide **passive, automatic** context enrichment:
 
 - **PreToolUse** — every `Grep`/`Glob` call is enriched with graph context (symbols, importers, dependencies, git signals) at ~24ms latency
 - **PostToolUse** — after git commits, the agent is notified when the wiki is stale

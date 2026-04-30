@@ -22,17 +22,23 @@ from repowise.core.persistence.database import get_session
 
 logger = logging.getLogger(__name__)
 
-_API_KEY = os.environ.get("REPOWISE_API_KEY")
-_REPOWISE_HOST = os.environ.get("REPOWISE_HOST", "127.0.0.1")
+
+def _env_alias(preferred: str, legacy: str, default: str | None = None) -> str | None:
+    """Read Codex Wise configuration with Repowise compatibility fallback."""
+    return os.environ.get(preferred) or os.environ.get(legacy) or default
+
+
+_API_KEY = _env_alias("CODEX_WISE_API_KEY", "REPOWISE_API_KEY")
+_CODEX_WISE_HOST = _env_alias("CODEX_WISE_HOST", "REPOWISE_HOST", "127.0.0.1")
 _header_scheme = APIKeyHeader(name="Authorization", auto_error=False)
 
 # Warn at import time if server is network-exposed without authentication
-if _API_KEY is None and _REPOWISE_HOST in ("0.0.0.0", "::"):
+if _API_KEY is None and _CODEX_WISE_HOST in ("0.0.0.0", "::"):
     logger.warning(
-        "SECURITY WARNING: Server is binding to %s without REPOWISE_API_KEY set. "
+        "SECURITY WARNING: Server is binding to %s without CODEX_WISE_API_KEY set. "
         "All endpoints are unauthenticated and network-accessible. "
-        "Set REPOWISE_API_KEY or bind to 127.0.0.1.",
-        _REPOWISE_HOST,
+        "Set CODEX_WISE_API_KEY or bind to 127.0.0.1.",
+        _CODEX_WISE_HOST,
     )
 
 
@@ -82,17 +88,17 @@ async def verify_api_key(
 ) -> None:
     """API key verification.
 
-    When REPOWISE_API_KEY is not set and server binds to loopback, this is a
+    When CODEX_WISE_API_KEY is not set and server binds to loopback, this is a
     no-op (local-only access). When binding to a non-loopback address without
     a key, requests are rejected (fail-closed for network-exposed deployments).
     When set, requests must include ``Authorization: Bearer <key>``.
     """
     if _API_KEY is None:
-        if _REPOWISE_HOST in ("0.0.0.0", "::"):
+        if _CODEX_WISE_HOST in ("0.0.0.0", "::"):
             raise HTTPException(
                 status_code=403,
-                detail="Server is network-exposed but REPOWISE_API_KEY is not set. "
-                "Set REPOWISE_API_KEY or bind to 127.0.0.1.",
+                detail="Server is network-exposed but CODEX_WISE_API_KEY is not set. "
+                "Set CODEX_WISE_API_KEY or bind to 127.0.0.1.",
             )
         return
     if not auth or not auth.startswith("Bearer "):

@@ -176,7 +176,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You'll see 
 To connect any MCP-compatible editor (Cursor, Cline, Windsurf):
 
 ```bash
-repowise mcp
+codex-wise mcp
 ```
 
 Then add the MCP server to your editor's configuration. See [MCP Server →](mcp-server) for editor-specific setup.

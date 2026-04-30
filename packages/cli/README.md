@@ -312,12 +312,12 @@ The API docs are available at `http://localhost:7337/docs`. Start the Next.js we
 
 ---
 
-### `repowise mcp`
+### `codex-wise mcp`
 
 Start the MCP server for AI editor integration (Claude Code, Cursor, Cline).
 
 ```
-repowise mcp [PATH] [OPTIONS]
+codex-wise mcp [PATH] [OPTIONS]
 ```
 
 | Option | Default | Description |
@@ -327,13 +327,13 @@ repowise mcp [PATH] [OPTIONS]
 
 ```bash
 # stdio transport, current directory (typical editor integration)
-repowise mcp
+codex-wise mcp
 
 # Specific repository path
-repowise mcp /path/to/repo
+codex-wise mcp /path/to/repo
 
 # SSE transport for web clients
-repowise mcp --transport sse
+codex-wise mcp --transport sse
 ```
 
 Exposes 16 MCP tools for querying wiki pages, symbols, the dependency graph, git analytics, ownership data, hotspots, dead code findings, and decision intelligence.
@@ -372,7 +372,7 @@ Exposes 16 MCP tools for querying wiki pages, symbols, the dependency graph, git
 |----------|-------------|
 | `ANTHROPIC_API_KEY` | API key for the Anthropic provider |
 | `OPENAI_API_KEY` | API key for the OpenAI provider |
-| `REPOWISE_DB_URL` | Override the default SQLite path (e.g., `postgresql://user:pass@host/db`) |
+| `CODEX_WISE_DB_URL` | Override the default SQLite path (e.g., `postgresql://user:pass@host/db`) |
 | `REPOWISE_EMBEDDER` | Embedder backend: `mock` (default) or `gemini` |
 
 ---

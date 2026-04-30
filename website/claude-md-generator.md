@@ -70,7 +70,7 @@ Your custom content goes here and is never touched.
 ## IMPORTANT: Codebase Intelligence Instructions for my-repo
 
 > **CRITICAL**: This repository is indexed by repowise.
-> You MUST use the repowise MCP tools below instead of reading raw source files.
+> You MUST use the Codex Wise MCP tools below instead of reading raw source files.
 
 ... auto-generated content ...
 

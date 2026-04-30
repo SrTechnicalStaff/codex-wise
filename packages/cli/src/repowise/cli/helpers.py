@@ -22,6 +22,11 @@ STATE_FILENAME = "state.json"
 REPOWISE_DIR = ".repowise"
 
 
+def get_env_alias(preferred: str, legacy: str, default: str | None = None) -> str | None:
+    """Return a Codex Wise env var, falling back to its Repowise legacy alias."""
+    return os.environ.get(preferred) or os.environ.get(legacy) or default
+
+
 # ---------------------------------------------------------------------------
 # Async bridge
 # ---------------------------------------------------------------------------
@@ -79,7 +84,8 @@ def ensure_repowise_dir(repo_path: Path) -> Path:
 def get_db_url_for_repo(repo_path: Path) -> str:
     """Return a database URL for this repo.
 
-    Prefers ``REPOWISE_DB_URL``, then the legacy ``REPOWISE_DATABASE_URL``.
+    Prefers ``CODEX_WISE_DB_URL``, then legacy ``REPOWISE_DB_URL`` and
+    ``REPOWISE_DATABASE_URL``.
     Otherwise defaults to the repo-local ``<repo>/.repowise/wiki.db``.
     """
     from repowise.core.persistence.database import resolve_db_url
@@ -222,9 +228,10 @@ def resolve_provider(
 
     Resolution order:
       1. Explicit ``--provider`` flag
-      2. ``REPOWISE_PROVIDER`` env var
-      3. ``.repowise/config.yaml`` (written by ``repowise init``)
-      4. Auto-detect from API key env vars
+      2. ``CODEX_WISE_PROVIDER`` env var
+      3. legacy ``REPOWISE_PROVIDER`` env var
+      4. ``.repowise/config.yaml`` (written by ``codex-wise init``)
+      5. Auto-detect from API key env vars
     """
     from repowise.core.providers import get_provider
 
@@ -233,7 +240,7 @@ def resolve_provider(
         cfg = load_config(repo_path)
 
     if provider_name is None:
-        provider_name = os.environ.get("REPOWISE_PROVIDER")
+        provider_name = get_env_alias("CODEX_WISE_PROVIDER", "REPOWISE_PROVIDER")
 
     if provider_name is None and cfg.get("provider"):
         provider_name = cfg["provider"]
@@ -344,7 +351,8 @@ def resolve_provider(
         return get_provider("gemini", **kwargs)
 
     raise click.ClickException(
-        "No provider configured. Use --provider, set REPOWISE_PROVIDER, "
+        "No provider configured. Use --provider, set CODEX_WISE_PROVIDER "
+        "(legacy: REPOWISE_PROVIDER), "
         "or set ANTHROPIC_API_KEY / OPENAI_API_KEY / OPENROUTER_API_KEY / OLLAMA_BASE_URL / GEMINI_API_KEY / GOOGLE_API_KEY."
     )
 
@@ -377,6 +385,7 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
 
     # Define required environment variables for each provider
     provider_env_vars = {
+        "codex_app": [],
         "anthropic": ["ANTHROPIC_API_KEY"],
         "openai": ["OPENAI_API_KEY"],
         "openrouter": ["OPENROUTER_API_KEY"],
@@ -411,7 +420,7 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
         # Check all providers - warn about any that could be configured but are missing keys
         for name, env_vars in provider_env_vars.items():
             if name == "gemini":
-                if os.environ.get("REPOWISE_PROVIDER") == "gemini" and not (
+                if get_env_alias("CODEX_WISE_PROVIDER", "REPOWISE_PROVIDER") == "gemini" and not (
                     _is_env_var_set("GEMINI_API_KEY") or _is_env_var_set("GOOGLE_API_KEY")
                 ):
                     # Only warn if it looks like they might be trying to use gemini
@@ -425,7 +434,9 @@ def validate_provider_config(provider_name: str | None = None) -> list[str]:
                 # Only warn if this provider is explicitly requested OR
                 # if the env var exists but is invalid (empty)
                 env_var_exists = any(_is_env_var_exists(var) for var in env_vars)
-                explicitly_requested = os.environ.get("REPOWISE_PROVIDER") == name
+                explicitly_requested = (
+                    get_env_alias("CODEX_WISE_PROVIDER", "REPOWISE_PROVIDER") == name
+                )
 
                 if explicitly_requested or env_var_exists:
                     warnings.append(

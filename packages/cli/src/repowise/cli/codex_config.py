@@ -11,7 +11,8 @@ from pathlib import Path
 
 import click
 
-_MCP_TABLE = "mcp_servers.repowise"
+_MCP_TABLE = "mcp_servers.codex-wise"
+_LEGACY_MCP_TABLE = "mcp_servers.repowise"
 _PREFERRED_COMMANDS = ("codex-wise", "repowise")
 _STARTUP_TIMEOUT_SEC = 20
 _TOOL_TIMEOUT_SEC = 120
@@ -33,7 +34,7 @@ def resolve_repowise_command(
         resolved = command_resolver(command)
         if resolved:
             return _normalize_path(Path(resolved))
-    return "repowise"
+    return "codex-wise"
 
 
 def generate_codex_mcp_table(
@@ -41,7 +42,7 @@ def generate_codex_mcp_table(
     *,
     command_resolver: Callable[[str], str | None] = shutil.which,
 ) -> str:
-    """Return the TOML table for the repowise MCP server."""
+    """Return the TOML table for the Codex Wise MCP server."""
     abs_path = _normalize_path(repo_path)
     args = ["mcp", abs_path, "--transport", "stdio"]
     command = resolve_repowise_command(command_resolver)
@@ -51,6 +52,12 @@ def generate_codex_mcp_table(
             f"command = {_toml_string(command)}",
             f"args = {json.dumps(args)}",
             f"cwd = {_toml_string(abs_path)}",
+            (
+                'env = { CODEX_WISE_PROVIDER = "codex_app", '
+                'CODEX_WISE_CODEX_TRANSPORT = "proxy", '
+                'CODEX_WISE_DOC_MODEL = "gpt-5.5", '
+                'CODEX_WISE_CODEX_REASONING_EFFORT = "medium" }'
+            ),
             f"startup_timeout_sec = {_STARTUP_TIMEOUT_SEC}",
             f"tool_timeout_sec = {_TOOL_TIMEOUT_SEC}",
         ]
@@ -62,7 +69,7 @@ def save_project_codex_config(
     *,
     command_resolver: Callable[[str], str | None] = shutil.which,
 ) -> Path:
-    """Merge the repowise MCP server into <repo>/.codex/config.toml."""
+    """Merge the Codex Wise MCP server into <repo>/.codex/config.toml."""
     codex_dir = repo_path / ".codex"
     codex_dir.mkdir(parents=True, exist_ok=True)
     config_path = codex_dir / "config.toml"
@@ -70,7 +77,7 @@ def save_project_codex_config(
 
     if config_path.exists():
         content = _load_valid_toml_text(config_path)
-        merged = _replace_or_append_table(content, (_MCP_TABLE,), table)
+        merged = _replace_or_append_table(content, (_MCP_TABLE, _LEGACY_MCP_TABLE), table)
     else:
         merged = table + "\n"
 

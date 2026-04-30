@@ -346,11 +346,11 @@ def _ensure_gitignored(repo_path: Path) -> None:
         # Append to existing file
         if not content.endswith("\n"):
             content += "\n"
-        content += f"\n# repowise API keys (local)\n{pattern}\n"
+        content += f"\n# Codex Wise API keys (local)\n{pattern}\n"
         gitignore.write_text(content, encoding="utf-8")
     else:
         gitignore.write_text(
-            f"# repowise API keys (local)\n{pattern}\n",
+            f"# Codex Wise API keys (local)\n{pattern}\n",
             encoding="utf-8",
         )
 
@@ -881,10 +881,10 @@ def build_contextual_next_steps(
     steps: list[tuple[str, str]] = []
 
     if index_only:
-        steps.append(("repowise mcp .", "start MCP server for AI assistants"))
+        steps.append(("codex-wise mcp .", "start MCP server for AI assistants"))
         steps.append(("repowise init --provider gemini", "generate full documentation"))
     else:
-        steps.append(("repowise mcp .", "start MCP server for AI assistants"))
+        steps.append(("codex-wise mcp .", "start MCP server for AI assistants"))
         steps.append(("repowise search <query>", "search the generated wiki"))
 
     if dead_unreachable + dead_unused > 0:
@@ -899,7 +899,7 @@ def build_contextual_next_steps(
         steps.append(("repowise decisions", f"browse {decision_count} architectural decisions"))
 
     if not steps:
-        steps.append(("repowise mcp .", "start MCP server for AI assistants"))
+        steps.append(("codex-wise mcp .", "start MCP server for AI assistants"))
         steps.append(("repowise search <query>", "search the index"))
 
     return steps

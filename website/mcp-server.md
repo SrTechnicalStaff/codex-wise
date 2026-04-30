@@ -27,7 +27,7 @@ The MCP (Model Context Protocol) server is how repowise talks to AI coding assis
 Start the server with:
 
 ```bash
-repowise mcp [PATH]
+codex-wise mcp [PATH]
 ```
 
 ---
@@ -121,9 +121,9 @@ Add to Windsurf's MCP configuration:
 The default transport. The MCP server runs as a subprocess of your editor, communicating over stdin/stdout. This is the correct option for Claude Code, Cursor, Cline, and Windsurf.
 
 ```bash
-repowise mcp                         # stdio, current directory
-repowise mcp /path/to/repo           # stdio, specific repo
-repowise mcp --transport stdio       # explicit
+codex-wise mcp                         # stdio, current directory
+codex-wise mcp /path/to/repo           # stdio, specific repo
+codex-wise mcp --transport stdio       # explicit
 ```
 
 ### SSE (Server-Sent Events)
@@ -131,11 +131,11 @@ repowise mcp --transport stdio       # explicit
 For web-based MCP clients or headless setups where a persistent HTTP server is preferable.
 
 ```bash
-repowise mcp --transport sse              # SSE on port 7338
-repowise mcp --transport sse --port 8080  # Custom port
+codex-wise mcp --transport sse              # SSE on port 7338
+codex-wise mcp --transport sse --port 8080  # Custom port
 ```
 
-Clients connect to `http://localhost:7338/sse` and receive server-sent events. Configure with `REPOWISE_MCP_PORT` env var or `mcp.settings.port` in `.repowise/mcp.json`.
+Clients connect to `http://localhost:7338/sse` and receive server-sent events. Configure with `CODEX_WISE_MCP_PORT` env var or `mcp.settings.port` in `.repowise/mcp.json`.
 
 ---
 

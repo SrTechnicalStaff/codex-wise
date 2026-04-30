@@ -590,7 +590,7 @@ CLAUDE.md contains:
   - Entry points list
   - Tech stack (categorized by type)
   - Hotspot files table (high churn)
-  - Repowise MCP tools (recommended workflow)
+  - Codex Wise MCP tools (recommended workflow)
   - Build commands (from project config)
 ```
 
@@ -1189,7 +1189,7 @@ repowise init ./my-project
      ▼
   Ready to serve:
   → repowise serve    → REST API + Web UI at http://localhost:8877
-  → repowise mcp      → MCP server for Claude Code / Cursor / Cline
+  → codex-wise mcp      → MCP server for Claude Code / Cursor / Cline
   → repowise search   → CLI search across documentation
   → repowise update   → Incremental sync after code changes
 ```

@@ -357,7 +357,7 @@ Useful for web UI preview.
   "generated_at": "2026-03-28",
   "repo_name": "myrepo",
   "sections": ["Architecture", "Key Modules", "Entry Points", "Tech Stack",
-               "Hotspots (High Churn)", "Repowise MCP Tools", "Codebase Conventions"]
+               "Hotspots (High Churn)", "Codex Wise MCP Tools", "Codebase Conventions"]
 }
 ```
 

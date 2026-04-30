@@ -143,7 +143,7 @@ The primary store. Contains:
 - Architectural decisions
 - Dead code findings
 
-Default: SQLite at `.repowise/wiki.db`. Switch to PostgreSQL by setting `REPOWISE_DB_URL`.
+Default: SQLite at `.repowise/wiki.db`. Switch to PostgreSQL by setting `CODEX_WISE_DB_URL`.
 
 ### Vector store (LanceDB)
 
@@ -163,7 +163,7 @@ The dependency graph is loaded into memory at server startup for fast traversal.
 
 The MCP server sits on top of the persistence layer and exposes everything to AI coding assistants via 10 tools. It's the primary interface between repowise and Claude Code, Cursor, Cline, or any other MCP-compatible editor.
 
-When you run `repowise mcp`, the server starts in stdio mode and your editor can begin calling tools. The tools are designed to answer the questions an AI needs to make good decisions about your code — not just "what is this file" but "should I edit it", "why is it structured this way", and "what will break if I change it".
+When you run `codex-wise mcp`, the server starts in stdio mode and your editor can begin calling tools. The tools are designed to answer the questions an AI needs to make good decisions about your code — not just "what is this file" but "should I edit it", "why is it structured this way", and "what will break if I change it".
 
 See [MCP Server →](mcp-server) for the full tool reference.
 

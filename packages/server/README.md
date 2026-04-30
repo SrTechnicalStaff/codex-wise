@@ -54,8 +54,8 @@ All configuration is via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `REPOWISE_DB_URL` | `sqlite+aiosqlite:///.repowise/wiki.db` | Database URL (SQLite or PostgreSQL) |
-| `REPOWISE_API_KEY` | _(none)_ | Bearer token required on all API requests (leave unset to disable auth) |
+| `CODEX_WISE_DB_URL` | `sqlite+aiosqlite:///.repowise/wiki.db` | Database URL (SQLite or PostgreSQL) |
+| `CODEX_WISE_API_KEY` | _(none)_ | Bearer token required on all API requests (leave unset to disable auth) |
 | `REPOWISE_EMBEDDER` | `mock` | Embedder backend: `mock` (FTS only) or `gemini` (real semantic search) |
 | `REPOWISE_WEBHOOK_SECRET` | _(none)_ | HMAC-SHA256 secret for verifying GitHub/GitLab webhook signatures |
 | `ANTHROPIC_API_KEY` | _(none)_ | Anthropic API key (required for Anthropic provider jobs) |
@@ -65,7 +65,7 @@ All configuration is via environment variables:
 
 ## REST API
 
-All endpoints are prefixed with `/api/`. When `REPOWISE_API_KEY` is set, every request must include an `Authorization: Bearer <key>` header.
+All endpoints are prefixed with `/api/`. When `CODEX_WISE_API_KEY` is set, every request must include an `Authorization: Bearer <key>` header.
 
 ### Repositories
 
@@ -177,8 +177,8 @@ Job progress events (`JobProgressEvent`) carry: `event` type, `file` currently b
 repowise exposes 16 MCP tools for AI coding assistants. Start the MCP server via:
 
 ```bash
-repowise mcp                          # stdio transport (Claude Code, Cursor, Cline)
-repowise mcp --transport sse          # SSE transport on port 7338
+codex-wise mcp                          # stdio transport (Claude Code, Cursor, Cline)
+codex-wise mcp --transport sse          # SSE transport on port 7338
 ```
 
 | Tool | What It Answers | When to Call |

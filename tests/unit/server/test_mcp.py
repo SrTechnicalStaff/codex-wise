@@ -1204,9 +1204,9 @@ def test_generate_mcp_config():
 
     config = generate_mcp_config(Path("/tmp/test-repo"))
     assert "mcpServers" in config
-    assert "repowise" in config["mcpServers"]
-    server = config["mcpServers"]["repowise"]
-    assert server["command"] == "repowise"
+    assert "codex-wise" in config["mcpServers"]
+    server = config["mcpServers"]["codex-wise"]
+    assert server["command"] == "codex-wise"
     assert "mcp" in server["args"]
     assert "stdio" in server["args"]
 
@@ -1220,7 +1220,7 @@ def test_format_setup_instructions():
     assert "Claude Code" in instructions
     assert "Cursor" in instructions
     assert "Cline" in instructions
-    assert "repowise" in instructions
+    assert "codex-wise" in instructions
 
 
 # ---- MCP lifespan DB resolution ----
@@ -1252,7 +1252,7 @@ async def test_mcp_lifespan_uses_cli_database_env_var(monkeypatch):
             return None
 
     class DummyVectorStore:
-        def __init__(self, *, embedder) -> None:
+        def __init__(self, *args, embedder=None) -> None:
             self.embedder = embedder
 
         async def close(self) -> None:
@@ -1273,7 +1273,7 @@ async def test_mcp_lifespan_uses_cli_database_env_var(monkeypatch):
     monkeypatch.setattr(mcp_server, "create_async_engine", fake_create_async_engine)
     monkeypatch.setattr(mcp_server, "init_db", fake_init_db)
     monkeypatch.setattr(mcp_server, "FullTextSearch", DummyFts)
-    monkeypatch.setattr(mcp_server, "InMemoryVectorStore", DummyVectorStore)
+    monkeypatch.setattr(mcp_server, "DisabledVectorStore", DummyVectorStore)
     monkeypatch.setattr(mcp_server, "async_sessionmaker", lambda *args, **kwargs: object())
     monkeypatch.setattr(mcp_server, "_load_vector_stores", fake_load_vector_stores)
 

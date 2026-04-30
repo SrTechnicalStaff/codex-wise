@@ -70,7 +70,7 @@ If Node.js 20+ is installed, the web UI starts automatically. Otherwise, use Doc
 **Connect to your AI editor (Claude Code, Cursor, Cline, Windsurf):**
 
 ```bash
-repowise mcp --transport stdio
+codex-wise mcp --transport stdio
 ```
 
 > **Automatic for Claude Code:** `repowise init` already registers the MCP server and installs PreToolUse/PostToolUse hooks in `~/.claude/settings.json`. Every `Grep`/`Glob` call is automatically enriched with graph context (importers, dependencies, symbols, git signals). After git commits, the agent is notified when the wiki is stale.
@@ -176,7 +176,7 @@ REPOWISE_API_URL=http://localhost:7337 npm run dev --workspace packages/web
 | `OPENAI_API_KEY` | Using OpenAI | OpenAI API key |
 | `GEMINI_API_KEY` | Using Gemini | Google Gemini API key |
 | `REPOWISE_EMBEDDER` | Semantic search | Embedder: `gemini`, `openai`, or `mock` (default) |
-| `REPOWISE_DB_URL` | Custom database | SQLite/PostgreSQL connection string (default: `.repowise/wiki.db`) |
+| `CODEX_WISE_DB_URL` | Custom database | SQLite/PostgreSQL connection string (default: `.repowise/wiki.db`) |
 | `REPOWISE_API_URL` | Frontend only | Backend URL for the web UI (default: `http://localhost:7337`) |
 
 ---

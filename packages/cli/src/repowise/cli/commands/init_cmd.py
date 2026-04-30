@@ -155,7 +155,7 @@ def _build_vector_store(repo_path: Path, embedder: Any | None) -> Any | None:
 
 
 def _register_mcp_with_claude(console_obj: Any, repo_path: Path) -> None:
-    """Register the repowise MCP server and hooks with Claude Desktop and Claude Code."""
+    """Register the Codex Wise MCP server and hooks with Claude Desktop and Claude Code."""
     from repowise.cli.mcp_config import (
         install_claude_code_hooks,
         register_with_claude_code,
@@ -796,13 +796,13 @@ def _workspace_init(
 
     if index_only or provider is None:
         next_steps = [
-            ("repowise mcp <repo-path>", "start MCP server for a repo"),
+            ("codex-wise mcp <repo-path>", "start MCP server for a repo"),
             ("repowise status --workspace", "show workspace status"),
             ("repowise init <repo> --provider gemini", "generate full docs for a repo"),
         ]
     else:
         next_steps = [
-            ("repowise mcp <repo-path>", "start MCP server for a repo"),
+            ("codex-wise mcp <repo-path>", "start MCP server for a repo"),
             ("repowise status --workspace", "show workspace status"),
             ("repowise search <query>", "search across all indexed repos"),
         ]

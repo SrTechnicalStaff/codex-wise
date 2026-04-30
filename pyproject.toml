@@ -1,12 +1,12 @@
 # ---------------------------------------------------------------------------
-# repowise — unified PyPI package
+# Codex Wise - unified PyPI package
 # ---------------------------------------------------------------------------
 [build-system]
 requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "repowise"
+name = "codex-wise"
 version = "0.4.0"
 description = "Codebase intelligence for developers and AI — generates and maintains a structured wiki for any codebase"
 readme = "README.md"
@@ -115,10 +115,10 @@ repowise = "repowise.cli.main:cli"
 codex-wise = "repowise.cli.main:cli"
 
 [project.urls]
-Homepage = "https://github.com/repowise-dev/repowise"
-Repository = "https://github.com/repowise-dev/repowise"
-Issues = "https://github.com/repowise-dev/repowise/issues"
-Documentation = "https://github.com/repowise-dev/repowise/blob/main/docs/USER_GUIDE.md"
+Homepage = "https://github.com/repowise-dev/codex-wise"
+Repository = "https://github.com/repowise-dev/codex-wise"
+Issues = "https://github.com/repowise-dev/codex-wise/issues"
+Documentation = "https://github.com/repowise-dev/codex-wise/blob/main/docs/USER_GUIDE.md"
 
 # ---------------------------------------------------------------------------
 # setuptools — explicit package-dir mapping across three src/ directories

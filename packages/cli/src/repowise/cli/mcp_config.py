@@ -39,10 +39,10 @@ def generate_mcp_config(repo_path: Path) -> dict:
     abs_path = str(repo_path.resolve()).replace("\\", "/")
     return {
         "mcpServers": {
-            "repowise": {
-                "command": "repowise",
+            "codex-wise": {
+                "command": "codex-wise",
                 "args": ["mcp", abs_path, "--transport", "stdio"],
-                "description": "repowise: codebase intelligence — docs, graph, git signals, dead code, decisions",
+                "description": "Codex Wise: codebase intelligence, docs, graph, git signals, dead code, decisions",
             }
         }
     }
@@ -61,7 +61,7 @@ def save_mcp_config(repo_path: Path) -> Path:
 def save_root_mcp_config(repo_path: Path) -> Path:
     """Write .mcp.json at repo root for Claude Code auto-discovery.
 
-    Merges the repowise server entry into any existing mcpServers block
+    Merges the Codex Wise server entry into any existing mcpServers block
     so other MCP servers configured by the user are preserved.
     """
     config_path = repo_path / ".mcp.json"
@@ -124,7 +124,7 @@ def _load_existing_config(config_path: Path) -> dict:
 
 
 def register_with_claude_desktop(repo_path: Path) -> Path | None:
-    """Add repowise MCP server to Claude Desktop's config.
+    """Add Codex Wise MCP server to Claude Desktop's config.
 
     Returns the config path if successful, None if Claude Desktop is not
     present or the platform is unsupported.
@@ -140,7 +140,7 @@ def register_with_claude_desktop(repo_path: Path) -> Path | None:
 
 
 def register_with_claude_code(repo_path: Path) -> Path | None:
-    """Add repowise MCP server to global Claude Code settings (~/.claude/settings.json).
+    """Add Codex Wise MCP server to global Claude Code settings (~/.claude/settings.json).
 
     Returns the settings path if successful, None on failure.
     """
@@ -168,7 +168,7 @@ def install_claude_code_hooks() -> Path | None:
         "hooks": [
             {
                 "type": "command",
-                "command": "repowise augment",
+                "command": "codex-wise augment",
                 "timeout": 10,
                 "statusMessage": "Enriching with codebase context...",
             }
@@ -180,7 +180,7 @@ def install_claude_code_hooks() -> Path | None:
         "hooks": [
             {
                 "type": "command",
-                "command": "repowise augment",
+                "command": "codex-wise augment",
                 "timeout": 10,
                 "statusMessage": "Checking wiki freshness...",
             }
@@ -213,11 +213,11 @@ def install_claude_code_hooks() -> Path | None:
 
 
 def _has_repowise_hook(hook_list: list) -> bool:
-    """Check if a repowise augment hook is already registered."""
+    """Check if a Codex Wise augment hook is already registered."""
     for entry in hook_list:
         for hook in entry.get("hooks", []):
             cmd = hook.get("command", "")
-            if "repowise augment" in cmd:
+            if "codex-wise augment" in cmd or "repowise augment" in cmd:
                 return True
     return False
 
@@ -225,7 +225,7 @@ def _has_repowise_hook(hook_list: list) -> bool:
 def format_setup_instructions(repo_path: Path) -> str:
     """Return human-readable setup instructions for MCP clients."""
     config = generate_mcp_config(repo_path)
-    server_block = json.dumps(config["mcpServers"]["repowise"], indent=4)
+    server_block = json.dumps(config["mcpServers"]["codex-wise"], indent=4)
     abs_path = str(repo_path.resolve()).replace("\\", "/")
 
     return f"""
@@ -241,12 +241,12 @@ Cursor (.cursor/mcp.json):
 
 Cline (cline_mcp_settings.json):
   "mcpServers": {{
-    "repowise": {server_block}
+    "codex-wise": {server_block}
   }}
 
 Or run directly:
-  repowise mcp {abs_path}
-  repowise mcp {abs_path} --transport sse --port 7338
+  codex-wise mcp {abs_path}
+  codex-wise mcp {abs_path} --transport sse --port 7338
 
 Config saved to: {repo_path / ".repowise" / "mcp.json"}
 Codex config: {repo_path / ".codex" / "config.toml"}

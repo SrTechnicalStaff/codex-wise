@@ -148,7 +148,7 @@ repowise init --provider litellm --model azure/gpt-4
 
 If you don't pass `--provider`, repowise detects your provider by checking:
 
-1. `REPOWISE_PROVIDER` environment variable
+1. `CODEX_WISE_PROVIDER` environment variable
 2. `provider` in `.repowise/config.yaml`
 3. API key environment variables, in order: `ANTHROPIC_API_KEY` → `OPENAI_API_KEY` → `OLLAMA_BASE_URL` → `GEMINI_API_KEY`
 
@@ -238,11 +238,11 @@ repowise also writes a `.mcp.json` at the repository root for Claude Code auto-d
 | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Google Gemini API key |
 | `OLLAMA_BASE_URL` | Ollama server URL (default: `http://localhost:11434`) |
 | `LITELLM_API_KEY` | LiteLLM proxy key |
-| `REPOWISE_PROVIDER` | Override provider (skips auto-detection) |
-| `REPOWISE_DB_URL` | Use PostgreSQL instead of SQLite (e.g., `postgresql+asyncpg://...`) |
-| `REPOWISE_HOST` | API server host (default: `127.0.0.1`) |
-| `REPOWISE_PORT` | API server port (default: `7337`) |
-| `REPOWISE_MCP_PORT` | MCP SSE server port (default: `7338`) |
+| `CODEX_WISE_PROVIDER` | Override provider (skips auto-detection) |
+| `CODEX_WISE_DB_URL` | Use PostgreSQL instead of SQLite (e.g., `postgresql+asyncpg://...`) |
+| `CODEX_WISE_HOST` | API server host (default: `127.0.0.1`) |
+| `CODEX_WISE_PORT` | API server port (default: `7337`) |
+| `CODEX_WISE_MCP_PORT` | MCP SSE server port (default: `7338`) |
 
 ---
 
@@ -288,7 +288,7 @@ repowise reads `.gitmodules` to detect submodule paths. When excluded, submodule
 For team deployments or larger repos, use PostgreSQL instead of SQLite:
 
 ```bash
-export REPOWISE_DB_URL="postgresql+asyncpg://user:pass@localhost:5432/repowise"
+export CODEX_WISE_DB_URL="postgresql+asyncpg://user:pass@localhost:5432/repowise"
 repowise init
 ```
 

@@ -8,8 +8,8 @@ from typing import Any
 import pytest
 
 from repowise.cli.helpers import (
-    ensure_repowise_dir,
     CONFIG_FILENAME,
+    ensure_repowise_dir,
     get_db_url_for_repo,
     get_head_commit,
     get_repowise_dir,
@@ -145,6 +145,7 @@ class TestValidateProviderConfig:
         monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        monkeypatch.delenv("CODEX_WISE_PROVIDER", raising=False)
         monkeypatch.delenv("REPOWISE_PROVIDER", raising=False)
 
         assert validate_provider_config() == []
@@ -174,16 +175,23 @@ class TestValidateProviderConfig:
 
     def test_openai_missing_key(self, monkeypatch):
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        monkeypatch.setenv("REPOWISE_PROVIDER", "openai")
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "openai")
 
         warnings = validate_provider_config()
         assert len(warnings) == 1
         assert "openai" in warnings[0]
         assert "OPENAI_API_KEY" in warnings[0]
 
+    def test_codex_app_needs_no_api_key(self, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "codex_app")
+
+        assert validate_provider_config() == []
+
     def test_gemini_with_gemini_key(self, monkeypatch):
         monkeypatch.setenv("GEMINI_API_KEY", "test-key")
-        monkeypatch.setenv("REPOWISE_PROVIDER", "gemini")
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "gemini")
 
         assert validate_provider_config() == []
 
@@ -253,7 +261,7 @@ class TestResolveProviderBaseUrl:
 
         monkeypatch.setattr("repowise.core.providers.get_provider", fake_get_provider)
         monkeypatch.setattr("repowise.cli.helpers.validate_provider_config", lambda *_args, **_kw: [])
-        monkeypatch.setenv("REPOWISE_PROVIDER", "openai")
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "openai")
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         monkeypatch.setenv("OPENAI_BASE_URL", "http://proxy.local")
 
@@ -262,6 +270,25 @@ class TestResolveProviderBaseUrl:
         assert result == "provider"
         assert captured["name"] == "openai"
         assert captured["kwargs"].get("base_url") == "http://proxy.local"
+
+    @staticmethod
+    def test_codex_app_provider_resolves_without_api_key(monkeypatch, tmp_path):
+        captured: dict[str, Any] = {}
+
+        def fake_get_provider(name: str, **kwargs: Any):
+            captured["name"] = name
+            captured["kwargs"] = kwargs
+            return "provider"
+
+        monkeypatch.setattr("repowise.core.providers.get_provider", fake_get_provider)
+        monkeypatch.setattr("repowise.cli.helpers.validate_provider_config", lambda *_args, **_kw: [])
+        monkeypatch.setenv("CODEX_WISE_PROVIDER", "codex_app")
+
+        result = resolve_provider(None, "gpt-5.4-mini", repo_path=tmp_path)
+
+        assert result == "provider"
+        assert captured["name"] == "codex_app"
+        assert captured["kwargs"]["model"] == "gpt-5.4-mini"
 
     @staticmethod
     def test_config_base_url_used_when_env_missing(monkeypatch, tmp_path):

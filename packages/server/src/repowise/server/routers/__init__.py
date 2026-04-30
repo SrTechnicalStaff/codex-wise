@@ -1,1 +1,1 @@
-"""repowise API routers."""
+"""Codex Wise API routers."""

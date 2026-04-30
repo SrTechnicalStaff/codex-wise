@@ -88,7 +88,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # This prevents the global ~/.repowise/wiki.db (which may contain stale
     # repos from old test runs) from being used as the main DB.
     db_url = resolve_db_url()
-    if not os.environ.get("REPOWISE_DB_URL") and not os.environ.get("REPOWISE_DATABASE_URL"):
+    if not (
+        os.environ.get("CODEX_WISE_DB_URL")
+        or os.environ.get("REPOWISE_DB_URL")
+        or os.environ.get("REPOWISE_DATABASE_URL")
+    ):
         try:
             from pathlib import Path as _WsPath
             from repowise.core.workspace.config import find_workspace_root, WorkspaceConfig
@@ -271,8 +275,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     """Build and return the configured FastAPI application."""
     app = FastAPI(
-        title="repowise API",
-        description="REST API for repowise — codebase documentation engine",
+        title="Codex Wise API",
+        description="REST API for Codex Wise - codebase documentation engine",
         version=__version__,
         lifespan=lifespan,
     )

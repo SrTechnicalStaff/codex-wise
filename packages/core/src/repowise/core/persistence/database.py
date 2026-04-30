@@ -78,7 +78,7 @@ __all__ = [
 
 DB_FILENAME = "wiki.db"
 REPOWISE_DIRNAME = ".repowise"
-DB_ENV_VARS = ("REPOWISE_DB_URL", "REPOWISE_DATABASE_URL")
+DB_ENV_VARS = ("CODEX_WISE_DB_URL", "REPOWISE_DB_URL", "REPOWISE_DATABASE_URL")
 
 
 def get_repo_db_path(repo_path: str | Path) -> Path:
@@ -135,10 +135,11 @@ def resolve_db_url(repo_path: str | Path | None = None) -> str:
     """Resolve the active DB URL from env vars or the default filesystem path.
 
     Resolution order:
-    1. ``REPOWISE_DB_URL``
-    2. ``REPOWISE_DATABASE_URL`` (legacy compatibility)
-    3. ``<repo>/.repowise/wiki.db`` when *repo_path* is provided
-    4. ``~/.repowise/wiki.db`` otherwise
+    1. ``CODEX_WISE_DB_URL``
+    2. ``REPOWISE_DB_URL`` (legacy compatibility)
+    3. ``REPOWISE_DATABASE_URL`` (legacy compatibility)
+    4. ``<repo>/.repowise/wiki.db`` when *repo_path* is provided
+    5. ``~/.repowise/wiki.db`` otherwise
     """
     configured = get_configured_db_url()
     if configured is not None:

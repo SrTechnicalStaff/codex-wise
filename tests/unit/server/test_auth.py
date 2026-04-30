@@ -8,7 +8,7 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_no_auth_configured_allows_access(client: AsyncClient) -> None:
-    """When REPOWISE_API_KEY is not set, all endpoints are open."""
+    """When CODEX_WISE_API_KEY is not set, all endpoints are open."""
     resp = await client.get("/api/repos")
     assert resp.status_code == 200
 

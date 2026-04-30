@@ -1,11 +1,11 @@
 ---
 name: codex-wise-dead-code-cleanup
 description: >
-  Use when evaluating indexed dead-code findings in a Repowise repository.
+  Use when evaluating indexed dead-code findings in a Codex Wise repository.
 user-invocable: false
 ---
 
-# Dead-Code Cleanup With Repowise
+# Dead-Code Cleanup With Codex Wise
 
 Dead-code findings are opt-in cleanup candidates, not deletion authority.
 

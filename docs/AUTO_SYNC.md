@@ -241,8 +241,8 @@ repowise watch --workspace             # auto-update all workspace repos on file
 | `ANTHROPIC_API_KEY` | CLI | API key for Anthropic LLM provider |
 | `REPOWISE_GITHUB_WEBHOOK_SECRET` | Server | HMAC secret for GitHub webhook verification |
 | `REPOWISE_GITLAB_WEBHOOK_TOKEN` | Server | Token for GitLab webhook verification |
-| `REPOWISE_DB_URL` | Server | Database URL (default: local SQLite) |
-| `REPOWISE_API_KEY` | Server | Bearer token for API authentication |
+| `CODEX_WISE_DB_URL` | Server | Database URL (default: local SQLite) |
+| `CODEX_WISE_API_KEY` | Server | Bearer token for API authentication |
 
 API keys can also be stored in `.repowise/.env` (auto-gitignored) during
 `repowise init`. The `update` and `reindex` commands load this file

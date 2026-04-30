@@ -45,7 +45,7 @@ def agents_md_command(
     to_stdout: bool,
     workspace_mode: bool,
 ) -> None:
-    """Generate or update AGENTS.md with Repowise MCP context."""
+    """Generate or update AGENTS.md with Codex Wise MCP context."""
     start_path = Path(path).resolve() if path else Path.cwd()
 
     if workspace_mode:

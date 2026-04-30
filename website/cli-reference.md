@@ -100,7 +100,7 @@ repowise init --resume
 ### Provider auto-detection
 
 If `--provider` is not specified, repowise checks in order:
-1. `REPOWISE_PROVIDER` environment variable
+1. `CODEX_WISE_PROVIDER` environment variable
 2. `.repowise/config.yaml` from a previous run
 3. API key environment variables: `ANTHROPIC_API_KEY` → `OPENAI_API_KEY` → `OLLAMA_BASE_URL` → `GEMINI_API_KEY`
 
@@ -164,7 +164,7 @@ repowise watch --debounce 3000   # Wait 3 seconds after last save before updatin
 Start the MCP server for AI editor integration.
 
 ```bash
-repowise mcp [PATH] [OPTIONS]
+codex-wise mcp [PATH] [OPTIONS]
 ```
 
 ### Options
@@ -177,8 +177,8 @@ repowise mcp [PATH] [OPTIONS]
 ### Examples
 
 ```bash
-repowise mcp                              # stdio (Claude Code, Cursor, Cline)
-repowise mcp --transport sse --port 7338  # SSE for web clients
+codex-wise mcp                              # stdio (Claude Code, Cursor, Cline)
+codex-wise mcp --transport sse --port 7338  # SSE for web clients
 ```
 
 See [MCP Server →](mcp-server) for editor-specific configuration.

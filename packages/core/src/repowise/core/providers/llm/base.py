@@ -1,6 +1,6 @@
 """Base provider interface and response types for repowise's LLM abstraction layer.
 
-repowise is model-agnostic by design. Any LLM — cloud or local — that implements
+repowise is model-agnostic by design. Any LLM - cloud or local - that implements
 BaseProvider can be used for documentation generation without changing any other code.
 
 Adding a new provider:
@@ -14,8 +14,9 @@ Adding a new provider:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 @dataclass
@@ -74,7 +75,7 @@ class BaseProvider(ABC):
 
         Args:
             system_prompt: System-level instructions (role, output format, rules).
-            user_prompt:   User-level content — typically a rendered Jinja2 template
+            user_prompt:   User-level content - typically a rendered Jinja2 template
                            containing the code context and documentation request.
             max_tokens:    Maximum tokens in the completion. Providers may enforce
                            lower limits; the provider should clip, not raise.
@@ -97,7 +98,7 @@ class BaseProvider(ABC):
         """Short, stable identifier for this provider.
 
         Used in logs, database records, and config files.
-        Examples: 'anthropic', 'openai', 'ollama', 'litellm', 'mock'.
+        Examples: 'codex_app', 'anthropic', 'openai', 'ollama', 'litellm', 'mock'.
         """
         ...
 
@@ -135,7 +136,7 @@ class RateLimitError(ProviderError):
     """Raised when rate limits are permanently exhausted after retries.
 
     This is a sub-class of ProviderError. Callers can catch either,
-    but RateLimitError signals that backing off longer won't help —
+    but RateLimitError signals that backing off longer won't help -
     the operator needs to review rate limits or reduce concurrency.
     """
 
@@ -175,7 +176,7 @@ class ChatStreamEvent:
     output_tokens: int = 0
 
 
-ToolExecutor = Any  # Callable[[str, dict], Awaitable[dict]] — but kept as Any to avoid import cycles
+ToolExecutor = Any  # Callable[[str, dict], Awaitable[dict]] - but kept as Any to avoid import cycles
 
 
 @runtime_checkable

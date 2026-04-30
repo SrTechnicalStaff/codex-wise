@@ -1106,7 +1106,7 @@ Key routers:
 - Background pipeline tasks are tracked in `app.state.background_tasks` to prevent
   garbage collection of `asyncio.Task` references.
 
-Authentication is optional. Set `REPOWISE_API_KEY` to require bearer token auth on
+Authentication is optional. Set `CODEX_WISE_API_KEY` to require bearer token auth on
 all non-`/health` endpoints. Default (no key set): fully open, suitable for local use.
 
 ### Web UI (Next.js 15)

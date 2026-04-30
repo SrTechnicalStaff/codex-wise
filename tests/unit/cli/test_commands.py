@@ -23,13 +23,13 @@ class TestCliBasics:
     def test_version(self, runner):
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "repowise" in result.output
+        assert "codex-wise" in result.output
         assert __version__ in result.output
 
     def test_help(self, runner):
         result = runner.invoke(cli, ["--help"])
         assert result.exit_code == 0
-        assert "repowise" in result.output
+        assert "codex-wise" in result.output
 
     def test_init_help(self, runner):
         result = runner.invoke(cli, ["init", "--help"])
@@ -104,6 +104,7 @@ class TestErrorCases:
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
         monkeypatch.delenv("REPOWISE_PROVIDER", raising=False)
+        monkeypatch.delenv("CODEX_WISE_PROVIDER", raising=False)
         result = runner.invoke(cli, ["init", str(tmp_path)])
         assert result.exit_code != 0
 

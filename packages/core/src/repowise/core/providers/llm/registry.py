@@ -5,6 +5,7 @@ Supports built-in providers and runtime registration of custom providers,
 enabling community-contributed providers without forking repowise.
 
 Built-in providers:
+    - codex_app  → CodexAppProvider
     - anthropic   → AnthropicProvider
     - openai      → OpenAIProvider
     - openrouter  → OpenRouterProvider
@@ -25,7 +26,8 @@ Custom provider registration:
 from __future__ import annotations
 
 import importlib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from repowise.core.providers.llm.base import BaseProvider
 from repowise.core.rate_limiter import PROVIDER_DEFAULTS, RateLimitConfig, RateLimiter
@@ -35,6 +37,7 @@ from repowise.core.rate_limiter import PROVIDER_DEFAULTS, RateLimitConfig, RateL
 # This means `pip install repowise-core` without anthropic installed still works —
 # you just can't use the anthropic provider.
 _BUILTIN_PROVIDERS: dict[str, tuple[str, str]] = {
+    "codex_app": ("repowise.core.providers.llm.codex_app", "CodexAppProvider"),
     "anthropic": ("repowise.core.providers.llm.anthropic", "AnthropicProvider"),
     "openai": ("repowise.core.providers.llm.openai", "OpenAIProvider"),
     "openrouter": ("repowise.core.providers.llm.openrouter", "OpenRouterProvider"),
@@ -133,6 +136,7 @@ def get_provider(
         # Give a helpful error message naming the missing package
         _missing = {
             "anthropic": "anthropic",
+            "codex_app": "codex CLI",
             "openai": "openai",
             "gemini": "google-genai",
             "ollama": "openai",  # ollama uses the openai package

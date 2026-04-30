@@ -330,14 +330,14 @@ def serve_command(port: int, host: str, workers: int, ui_port: int, no_ui: bool)
 
     _setup_embedder()
 
-    # Auto-detect local .repowise/ directory if REPOWISE_DB_URL is not set.
-    # repowise init writes to <repo>/.repowise/wiki.db, so honour it when
-    # the user runs `repowise serve` from the same directory.
-    if not os.environ.get("REPOWISE_DB_URL"):
+    # Auto-detect local .repowise/ directory if no DB URL is set.
+    # codex-wise init writes to <repo>/.repowise/wiki.db, so honor it when
+    # the user runs `codex-wise serve` from the same directory.
+    if not (os.environ.get("CODEX_WISE_DB_URL") or os.environ.get("REPOWISE_DB_URL")):
         local_repowise = Path.cwd() / ".repowise"
         if local_repowise.exists():
             local_db = local_repowise / "wiki.db"
-            os.environ["REPOWISE_DB_URL"] = f"sqlite+aiosqlite:///{local_db.as_posix()}"
+            os.environ["CODEX_WISE_DB_URL"] = f"sqlite+aiosqlite:///{local_db.as_posix()}"
             console.print(f"[dim]Using local database: {local_db}[/dim]")
 
     frontend_proc: subprocess.Popen | None = None

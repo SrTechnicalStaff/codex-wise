@@ -1,4 +1,4 @@
-"""repowise CLI — codebase intelligence for developers and AI."""
+"""Codex Wise CLI - codebase intelligence for developers and AI."""
 
 from __future__ import annotations
 
@@ -26,9 +26,9 @@ from repowise.cli.commands.workspace_cmd import workspace_group
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="repowise")
+@click.version_option(version=__version__, prog_name="codex-wise")
 def cli() -> None:
-    """repowise -- codebase intelligence for developers and AI."""
+    """codex-wise -- codebase intelligence for developers and AI."""
 
 
 cli.add_command(augment_command)

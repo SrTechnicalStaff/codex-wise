@@ -316,7 +316,7 @@ See [Auto-Sync](AUTO_SYNC.md) for all sync methods (hooks, file watcher, webhook
 
 ## Utility Commands
 
-### `repowise mcp [PATH]`
+### `codex-wise mcp [PATH]`
 
 Start the MCP server for AI editor integration.
 
@@ -328,8 +328,8 @@ Start the MCP server for AI editor integration.
 | `--port` | Port for SSE transport (default: 7338) |
 
 ```bash
-repowise mcp --transport stdio           # for Claude Code, Cursor, etc.
-repowise mcp --transport sse --port 7338 # for web clients
+codex-wise mcp --transport stdio           # for Claude Code, Cursor, etc.
+codex-wise mcp --transport sse --port 7338 # for web clients
 ```
 
 See [MCP Tools](MCP_TOOLS.md) for all 7 exposed tools.

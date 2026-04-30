@@ -86,7 +86,7 @@ class GenerationJob(Base):
 class Page(Base):
     """A generated wiki page.
 
-    The primary key is page_id: "{page_type}:{target_path}" — same format as
+    The primary key is page_id: "{page_type}:{target_path}" - same format as
     GeneratedPage.page_id. This is a natural key so callers can upsert without
     knowing the database row ID.
     """
@@ -100,7 +100,7 @@ class Page(Base):
     page_type: Mapped[str] = mapped_column(String(64), nullable=False)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    # 1–3 sentence purpose blurb. Always populated (LLM-extracted from content
+    # 1-3 sentence purpose blurb. Always populated (LLM-extracted from content
     # for full mode, deterministic structure summary for index-only mode).
     # Surfaced by get_context as the default narrative; content is gated
     # behind include=["full_doc"] to keep MCP responses small.
@@ -241,7 +241,7 @@ class WikiSymbol(Base):
         String(32), ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False
     )
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
-    # "{path}::{name}" — the ingestion Symbol.id field
+    # "{path}::{name}" - the ingestion Symbol.id field
     symbol_id: Mapped[str] = mapped_column(Text, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     qualified_name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -502,10 +502,11 @@ class DeadCodeFinding(Base):
 class AnswerCache(Base):
     """Cached LLM-synthesized answers from get_answer.
 
-    Keyed by (repo_id, question_hash). The hash is computed from the
-    normalized question text only — answer cache invalidation on index
-    change is handled by deleting rows for a repository when its alembic
-    head advances (cheap to rebuild).
+    Keyed by (repo_id, question_hash, provider_name, model_name). The hash is
+    computed from the normalized question text plus any synthesis-affecting
+    answer options. Answer cache invalidation on index change is handled by
+    deleting rows for a repository when its alembic head advances (cheap to
+    rebuild).
 
     Storing payload as a single JSON text column keeps the schema stable
     across get_answer response shape changes.
@@ -533,5 +534,11 @@ class AnswerCache(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("repository_id", "question_hash", name="uq_answer_cache_q"),
+        UniqueConstraint(
+            "repository_id",
+            "question_hash",
+            "provider_name",
+            "model_name",
+            name="uq_answer_cache_q_provider_model",
+        ),
     )

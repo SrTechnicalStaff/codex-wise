@@ -140,7 +140,7 @@ During refactoring or cleanup tasks, Claude calls `get_dead_code()` to find conf
 
 Skills in Claude Code are prompt instructions that modify Claude's behavior. The repowise plugin registers four skills that Claude loads when working in an indexed repo.
 
-You don't need to trigger them manually. When Claude detects it's working in a repo with a connected repowise MCP server, the skills activate automatically.
+You don't need to trigger them manually. When Claude detects it's working in a repo with a connected Codex Wise MCP server, the skills activate automatically.
 
 The CLAUDE.md generator reinforces these skills by writing the mandatory MCP tool workflow directly into your project's context file — so even without the plugin, any Claude session that reads your CLAUDE.md will follow the same workflow.
 
